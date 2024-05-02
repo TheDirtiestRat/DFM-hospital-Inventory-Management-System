@@ -1,0 +1,80 @@
+*, *::after, *::before {
+    box-sizing: border-box;
+}
+
+:root {
+    --hue: 10;
+    --saturation: 90%;
+    --random-background: hsl(var(--hue), var(--saturation), 75%)
+}
+
+body {
+    margin: 0;
+    background-color: var(--random-background);
+    overflow: hidden;
+}
+
+.paddle {
+    --position: 50;
+
+    position:absolute;
+    background-color: whitesmoke;
+
+    /* positions */
+    top: calc(var(--position) * 1vh);
+    transform: translateY(-50%);
+
+    /* size of the paddle */
+    border-radius: 1rem;
+    width: 1.5vh;
+    height: 16vh;
+}
+
+.paddle.left {
+    left: 2vw
+}
+
+.paddle.right {
+    right: 2vw
+}
+
+.ball {
+    --x: 50;
+    --y: 50;
+
+    position:absolute;
+    background-color: white;
+    /* positions */
+    left: calc(var(--x) * 1vw);
+    top: calc(var(--y) * 1vh);
+
+    /* center it */
+    transform: translate(-50%, -50%);
+
+    /* size of the ball */
+    border-radius: 50%;
+    width: 2.5vh;
+    height: 2.5vh;
+}
+
+.score {
+    display: flex;
+    justify-content: center;
+    font-weight: lighter;
+    font-size: 7vh;
+    color: white;
+}
+
+.score > * {
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 0 1.5vh;
+    margin: 1.5vh 0;
+    opacity: .4;
+}
+
+/* line between them */
+.score > :first-child {
+    text-align: right;
+    border-right: .5vh solid;
+}
