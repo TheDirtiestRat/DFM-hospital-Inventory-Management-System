@@ -36,7 +36,7 @@
         <div class="row justify-content-between gap-2 m-0">
             <div class="col-auto">
                 <label for="medicine_id" class="form-label">Medicine Id</label>
-                <input type="number" class="form-control" placeholder="999999" name="medicine_id" id="medicine_id"
+                <input type="text" class="form-control" placeholder="999999" name="medicine_id" id="medicine_id"
                     value="{{ $medicine->medicine_id }}" readonly required>
             </div>
             <div class="col-auto">

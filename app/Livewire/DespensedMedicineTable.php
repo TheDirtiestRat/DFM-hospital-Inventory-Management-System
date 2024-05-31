@@ -64,6 +64,7 @@ final class DespensedMedicineTable extends PowerGridComponent
 
             ->addColumn('patient')
             ->addColumn('medicine')
+            ->addColumn('doctor')
             ->addColumn('quantity')
             ->addColumn('created_at_formatted', fn (DespenseMedicine $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'));
     }
@@ -97,6 +98,7 @@ final class DespensedMedicineTable extends PowerGridComponent
         return [
             Filter::inputText('despenser')->operators(['contains']),
             Filter::inputText('despensed')->operators(['contains']),
+            Filter::inputText('doctor')->operators(['contains']),
             Filter::inputText('medicine')->operators(['contains', 'is', 'is_not']),
             Filter::inputText('quantity')->operators(['contains', 'is', 'is_not']),
             // Filter::datetimepicker('created_at'),

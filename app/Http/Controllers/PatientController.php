@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Http\Controllers\ReportsController;
 use App\Models\User;
 use App\Notifications\NewPatient;
+use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
 {
@@ -32,11 +33,120 @@ class PatientController extends Controller
     public function by_barangay()
     {
         // get the data of patients
-        $barangays = Patient::query()->selectRaw('count(id) as total, barangay')->groupBy('barangay')->paginate(12);
-        // dd($patients_by_bloodTypes);
+        $regions = DB::table('barangay_list')->groupBy('region')->get('region');
+        $barangays = DB::table('barangay_list')->get();
+        $patients = Patient::query()->selectRaw('count(id) as total, barangay')->groupBy('barangay')->get();
 
         // give that data to the view
-        return view('patient.by-barangay', compact('barangays'));
+        return view('patient.by-barangay', compact('regions', 'barangays', 'patients'));
+    }
+
+    public function barangay_detail_sum(Request $request)
+    {
+        $brgy = $request->brgy;
+
+        $new_patients = Patient::query()->where('barangay', '=', $brgy)->latest()->limit(8)->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
+        $total_patients = Patient::query()->where('barangay', '=', $brgy)->count();
+        $date_today = date('Y-m-d');
+        // $total_today = Patient::query()->where('barangay', '=', $brgy)->count();
+        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->where('barangay', '=', $brgy)->count();
+
+        $despensed = DespenseMedicine::query()->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->where('patients.barangay', '=', $brgy)->get();
+        $total_despensed = count($despensed);
+        $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->where('barangay', '=', $brgy)->groupBy('gender')->get();
+        $total_by_bloodType = Patient::query()->selectRaw('blood_type, count(case_no) as total')->where('barangay', '=', $brgy)->groupBy('blood_type')->get();
+
+        $total_by_diagnosis = PatientCase::query()->join('patients', 'patient_cases.case_no', '=', 'patients.case_no')->selectRaw('patient_cases.diagnosis, count(patient_cases.case_no) as total')->where('barangay', '=', $brgy)->groupBy('diagnosis')->get();
+
+        // get total by age groups
+        $baby = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [0, 1])->count();
+        $child = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [1, 10])->count();
+        $teen = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [11, 20])->count();
+        $adult = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [21, 59])->count();
+        $old = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [60, 100])->count();
+
+        // get total by bmi groups
+        $Underweight = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [0, 18.5])->count();
+        $Obesity = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [30, 500])->count();
+        $Normal_weight = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [18.6, 24.9])->count();
+        $Overweight = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [25, 29.9])->count();
+
+        return view('components.barangay-details', compact(
+            'new_patients',
+            'total_patients',
+            'total_today',
+            'total_despensed',
+            'total_by_gender',
+            'total_by_bloodType',
+            'total_by_diagnosis',
+
+            'baby',
+            'child',
+            'teen',
+            'adult',
+            'old',
+
+            'Underweight',
+            'Obesity',
+            'Normal_weight',
+            'Overweight',
+        ));
+    }
+
+    public function printable_barangay_detail_summary(Request $request)
+    {
+        $brgy = $request->brgy;
+
+        $new_patients = Patient::query()->where('barangay', '=', $brgy)->latest()->limit(8)->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
+        $total_patients = Patient::query()->where('barangay', '=', $brgy)->count();
+        $date_today = date('Y-m-d');
+        // $total_today = Patient::query()->where('barangay', '=', $brgy)->count();
+        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->where('barangay', '=', $brgy)->count();
+
+        $despensed = DespenseMedicine::query()->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->where('patients.barangay', '=', $brgy)->get();
+        $total_despensed = count($despensed);
+        $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->where('barangay', '=', $brgy)->groupBy('gender')->get();
+        $total_by_bloodType = Patient::query()->selectRaw('blood_type, count(case_no) as total')->where('barangay', '=', $brgy)->groupBy('blood_type')->get();
+
+        $total_by_diagnosis = PatientCase::query()->join('patients', 'patient_cases.case_no', '=', 'patients.case_no')->selectRaw('patient_cases.diagnosis, count(patient_cases.case_no) as total')->where('barangay', '=', $brgy)->groupBy('diagnosis')->get();
+
+        // get total by age groups
+        $baby = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [0, 1])->count();
+        $child = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [1, 10])->count();
+        $teen = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [11, 20])->count();
+        $adult = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [21, 59])->count();
+        $old = Patient::query()->where('barangay', '=', $brgy)->whereBetween('age', [60, 100])->count();
+
+        // get total by bmi groups
+        $Underweight = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [0, 18.5])->count();
+        $Obesity = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [30, 500])->count();
+        $Normal_weight = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [18.6, 24.9])->count();
+        $Overweight = Patient::query()->where('barangay', '=', $brgy)->whereBetween('BMI', [25, 29.9])->count();
+
+        // dd($Underweight . " " . $Obesity . " " . $Normal_weight . " " . $Overweight);
+
+        return view('printables.BarangayReports', compact(
+            'new_patients',
+            'total_patients',
+            'total_today',
+            'total_despensed',
+            'total_by_gender',
+            'total_by_bloodType',
+            'total_by_diagnosis',
+
+            'brgy',
+
+            'baby',
+            'child',
+            'teen',
+            'adult',
+            'old',
+
+            'Underweight',
+            'Obesity',
+            'Normal_weight',
+            'Overweight',
+        ));
     }
 
     public function sort_patient(Request $request)
@@ -79,7 +189,9 @@ class PatientController extends Controller
             $patients->appends(['key' => $key]);
         }
 
-        return view('patient.index', compact('patients', 'patients_by_bloodTypes', 'patients_by_citizenship'));
+        $barangays = Patient::query()->selectRaw('count(id) as total, barangay')->groupBy('barangay')->get();
+
+        return view('patient.index', compact('patients', 'patients_by_bloodTypes', 'patients_by_citizenship', 'barangays'));
         // return view('components.copyright');
     }
 
@@ -122,6 +234,8 @@ class PatientController extends Controller
         $date_today = date('Y-m-d');
         $diagnosis_no = fake()->numerify('D######');
 
+        $barangays = DB::table('barangay_list')->get('barangay');
+
         // dd($date_today);
 
         return view('patient.create', compact(
@@ -129,6 +243,7 @@ class PatientController extends Controller
             'arrival_time',
             'date_today',
             'diagnosis_no',
+            'barangays',
         ));
     }
 
@@ -178,6 +293,11 @@ class PatientController extends Controller
             'birth_place' => $data['birth_place'],
             'blood_type' => $data['blood_type'],
 
+            // physical info
+            'height' => $data['height'],
+            'weight' => $data['weight'],
+            'BMI' => $data['BMI'],
+
             'gender' => $data['gender'],
             'religion' => $data['religion'],
             'citizenship' => $data['citizenship'],
@@ -204,7 +324,7 @@ class PatientController extends Controller
         }
 
         // send notification
-        $patient_fullname =$data['first_name'] . ' ' . $data['mid_name'] . ' ' . $data['last_name'];
+        $patient_fullname = $data['first_name'] . ' ' . $data['mid_name'] . ' ' . $data['last_name'];
         $users = User::all();
         Notification::send($users, new NewPatient($patient->id, $patient_fullname));
 

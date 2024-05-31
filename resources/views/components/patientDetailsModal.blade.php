@@ -17,6 +17,33 @@
         <p><strong>Age :</strong>  {{ $patient->age }}</p>
     </div>
     <div class="col-md-6">
+        <p><strong>Height :</strong> {{ $patient->height }}</p>
+    </div>
+    <div class="col-md-6">
+        <p><strong>Weight :</strong> {{ $patient->weight }}</p>
+    </div>
+    <div class="col-md-6">
+        {{-- determine BMI category --}}
+        @php
+            $bmi_category = '';
+            if ($patient->BMI <= 18.5) {
+                $bmi_category = '<span class="badge text-bg-secondary">Underweight</span>';
+            }
+            if (($patient->BMI >= 30)) {
+                $bmi_category = '<span class="badge text-bg-danger">Obesity</span>';
+            }
+            if (($patient->BMI >= 18.6) && ($patient->BMI <= 24.9)) {
+                $bmi_category = '<span class="badge text-bg-primary">Normal weight</span>';
+            }
+            if (($patient->BMI >= 25) && ($patient->BMI <= 29.9)) {
+                $bmi_category = '<span class="badge text-bg-warning">Overweight</span>';
+            }
+        @endphp
+        <p><strong>BMI :</strong> {{ $patient->BMI }} @php
+            echo $bmi_category;
+        @endphp</p>
+    </div>
+    <div class="col-md-6">
         <p><strong>Birth Date :</strong> {{ $patient->birth_date }}</p>
     </div>
     <div class="col-md-6">

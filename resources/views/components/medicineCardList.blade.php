@@ -21,14 +21,15 @@
                     @endphp
                     <div class="text-center {{ $class }}" data-bs-toggle="tooltip"
                         data-bs-title="{{ $tooltip }}">
-                        Id<strong>: {{ $medicine->medicine_id }}</strong></a>
+                        PO No. {{ $medicine->medicine_id }}
+                        {{-- PO No. <strong>{{ $medicine->medicine_id }}</strong> --}}
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="row g-2">
                         <div class="col-md-auto col-12 text-center">
-                            <img src="{{ asset('storage/medicine img/' . $medicine->photo) }}" class="img-fill border rounded-4"
-                                alt="" width="100" height="100">
+                            <img src="{{ asset('storage/medicine img/' . $medicine->photo) }}"
+                                class="img-fill border rounded-4" alt="" width="100" height="100">
                         </div>
                         <div class="col-md-6">
                             <h5 class="card-title text-truncate m-0 ">{{ $medicine->name }}</h5>

@@ -30,14 +30,41 @@
                 <div class="col-12">
                     <h3>Personal Information</h3>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <p>
                         <strong>Name : </strong>
                         {{ $patient->first_name }} {{ $patient->mid_name }} {{ $patient->last_name }}
                     </p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <p><strong>Age :</strong> {{ $patient->age }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Height :</strong> {{ $patient->height }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Weight :</strong> {{ $patient->weight }}</p>
+                </div>
+                <div class="col-md-4">
+                    {{-- determine BMI category --}}
+                    @php
+                        $bmi_category = '';
+                        if ($patient->BMI <= 18.5) {
+                            $bmi_category = '<span class="badge text-bg-secondary">Underweight</span>';
+                        }
+                        if ($patient->BMI >= 30) {
+                            $bmi_category = '<span class="badge text-bg-danger">Obesity</span>';
+                        }
+                        if ($patient->BMI >= 18.6 && $patient->BMI <= 24.9) {
+                            $bmi_category = '<span class="badge text-bg-primary">Normal weight</span>';
+                        }
+                        if ($patient->BMI >= 25 && $patient->BMI <= 29.9) {
+                            $bmi_category = '<span class="badge text-bg-warning">Overweight</span>';
+                        }
+                    @endphp
+                    <p><strong>BMI :</strong> {{ $patient->BMI }} @php
+                        echo $bmi_category;
+                    @endphp</p>
                 </div>
                 <div class="col-md-6">
                     <p><strong>Birth Date :</strong> {{ $patient->birth_date }}</p>
@@ -250,8 +277,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="brought_by" class="form-label"> Brought By</label>
-                                <input type="text" class="form-control" placeholder="Example" name="brought_by" id="brought_by"
-                                    value="">
+                                <input type="text" class="form-control" placeholder="Example" name="brought_by"
+                                    id="brought_by" value="">
                             </div>
                             <div class="col-md-6">
                                 <label for="time_arrival" class="form-label">Time of Arrival</label>

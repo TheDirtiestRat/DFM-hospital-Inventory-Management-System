@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ReportsController;
@@ -41,6 +42,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('patient', PatientController::class);
         Route::get('/patient_details', [PatientController::class, 'show_patient_partial_details']);
         Route::get('/patientsByBarangay', [PatientController::class, 'by_barangay']);
+
+        // modal details
+        Route::get('/barangay_details', [PatientController::class, 'barangay_detail_sum']);
+
         Route::get('/diagnosis_details', [PatientController::class, 'show_patient_diagnosis_details']);
         Route::get('/search_patient', [PatientController::class, 'search_patient_details']);
 
@@ -50,6 +55,10 @@ Route::middleware('auth')->group(function () {
 
         // printables
         Route::get('/printPatientReports', [ReportsController::class, 'printable_patient_report']);
+        Route::get('/printBarangayReports', [PatientController::class, 'printable_barangay_detail_summary']);
+        // Route::get('/printBarangayReports', function () {
+        //     dd('test');
+        // });
     });
 
 
@@ -69,8 +78,11 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/despenseMedicine', [MedicineController::class, 'despense_medicine'])->name('despenseMedicine');
         Route::get('/despenseMedicineList', [MedicineController::class, 'despensed_meds_list']);
+        Route::post('/despenseMedicineReciept', [MedicineController::class, 'despense_medicine_reciept']);
         Route::post('/recordDespenseMedicine', [MedicineController::class, 'record_despense_medicine']);
+
         Route::get('/getPatientToDespense', [MedicineController::class, 'get_patient_info']);
+        Route::get('/getPatientDatalist', [MedicineController::class, 'get_patient_datalist']);
 
         // sortables
         // Route::get('/medicineReportsMonthly', [ReportsController::class, 'get_medicine_report']);
@@ -83,6 +95,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('user.type:ADMIN')->group(function () {
         // request freatures
         Route::resource('assistanceRequest', RequestAssistanceController::class);
+
+        Route::resource('doctors', DoctorController::class);
+        Route::get('/search_doctor', [DoctorController::class, 'search_doctor']);
+
         Route::get('/applyAssistanceRequest/{id}', [RequestAssistanceController::class, 'create']);
         Route::get('/getPatientInformation', [RequestAssistanceController::class, 'get_patient_information']);
         Route::get('/search_request', [RequestAssistanceController::class, 'search_assitance_request']);

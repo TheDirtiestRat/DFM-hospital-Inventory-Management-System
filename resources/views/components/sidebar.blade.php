@@ -202,6 +202,36 @@
                 </li> --}}
             @endif
 
+            @if (Auth::user()->type == $user_types[2] || Auth::user()->type == $user_types[0])
+                <li class="nav-item">
+                    <a class="btn btn-primary w-100 text-start" data-bs-toggle="collapse" href="#collapseDoctor"
+                        role="button" aria-expanded="false" aria-controls="collapseDoctor">
+                        <i class="bi bi-caret-right-fill"></i>
+                        Doctors
+                    </a>
+                </li>
+
+                <div class="nav-item">
+                    {{-- collapse content --}}
+                    <div class="collapse" id="collapseDoctor">
+                        <ul class="nav gap-2  nav-pills flex-column p-1">
+                            {{-- <li class="nav-item">
+                                <a href="{{ route('doctors.create') }}" class="btn btn-sm btn-light text-start w-100">
+                                    <i class="bi bi-person-add"></i>
+                                    Add new Doctor
+                                </a>
+                            </li> --}}
+                            <li class="nav-item">
+                                <a href="{{ route('doctors.index') }}" class="btn btn-sm btn-light text-start w-100">
+                                    <i class="bi bi-people"></i>
+                                    List of Doctors
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             {{-- accessed by admin --}}
             @if (Auth::user()->type == $user_types[0])
                 {{-- options assistance request --}}

@@ -11,6 +11,10 @@
         .ra {
             color: red;
         }
+
+        /* datalist {
+                                            display: block;
+                                        } */
     </style>
 @endsection
 
@@ -83,7 +87,8 @@
                             max="{{ $date_today }}" value="" onchange="set_age()" required>
                     </div>
                     <div class="col-md-auto">
-                        <label for="age" class="form-label"><span class="ra">*</span> Age</label>
+                        <label for="age" class="form-label"><span class="ra">*</span> Age by year <span
+                                id="age_mean"></span></label>
                         <input type="number" class="form-control" placeholder="18" name="age" id="age"
                             min="0" max="200" step="1" value="" readonly>
                     </div>
@@ -102,13 +107,36 @@
                         </select>
                     </div>
                     <div class="col-md col-12">
-                        <label for="gender" class="form-label"><span class="ra">*</span> Gender</label>
+                        <label for="gender" class="form-label"><span class="ra">*</span> Sex</label>
                         <select class="form-select" name="gender" id="gender" required>
                             <option selected disabled value>Select Gender</option>
                             <option value="Female">Female</option>
                             <option value="Male">Male</option>
                             {{-- <option value="Others">Others</option> --}}
                         </select>
+                    </div>
+                </div>
+
+                {{-- Physical info --}}
+                <div class="row g-2 m-2">
+                    <div class="col-md">
+                        <label for="height" class="form-label"><span class="ra"><span
+                                    class="ra">*</span></span>
+                            Height</label>
+                        <input type="number" class="form-control" onkeyup="cal_bmi()" name="height" id="height"
+                            value="" required>
+                    </div>
+                    <div class="col-md">
+                        <label for="weight" class="form-label"><span class="ra"><span
+                                    class="ra">*</span></span>
+                            Weight</label>
+                        <input type="number" class="form-control" onkeyup="cal_bmi()" name="weight" id="weight"
+                            value="" autocomplete="true" required>
+                    </div>
+                    <div class="col-md">
+                        <label for="BMI" class="form-label">BMI <span id="bmi_cat"></span></label>
+                        <input type="number" class="form-control" placeholder="" name="BMI" id="BMI"
+                            value="" readonly>
                     </div>
                 </div>
 
@@ -142,17 +170,19 @@
                     </div>
                     <div class="col-4">
                         <label for="barangay" class="form-label"><span class="ra">*</span> Barangay</label>
-                        <div class="input-group">
-                            <span class="input-group-text" id="basic-addon1">Brgy. </span>
-                            <input type="text" class="form-control" placeholder=""
-                            name="barangay" id="barangay" value="" autocomplete="true" required>
-                        </div>
-                        
+                        <input type="text" class="form-control" placeholder="Brgy." name="barangay"
+                            list="barangay_list" id="barangay" value="" required>
+                        <datalist id="barangay_list">
+                            {{-- list of barangays --}}
+                            @foreach ($barangays as $brgy)
+                                <option value="{{ $brgy->barangay }}">
+                            @endforeach
+                        </datalist>
                     </div>
                     <div class="col-8">
                         <label for="address" class="form-label"><span class="ra">*</span> Address</label>
-                        <input type="text" class="form-control" placeholder="BRGY. MACALIPAY PASTRANA LEYTE"
-                            name="address" id="address" value="{{ $test_value }}" autocomplete="true" required>
+                        <input type="text" class="form-control" placeholder="Address" name="address" id="address"
+                            value="{{ $test_value }}" autocomplete="true" required>
                     </div>
                 </div>
             </div>
@@ -163,8 +193,8 @@
                     </div>
                     <div class="col-12">
                         <label for="diagnosis_number" class="form-label">Diagnosis Number</label>
-                        <input type="text" class="form-control" placeholder="" name="diagnosis_number" id="diagnosis_number"
-                            value="{{ $diagnosis_no }}" readonly required>
+                        <input type="text" class="form-control" placeholder="" name="diagnosis_number"
+                            id="diagnosis_number" value="{{ $diagnosis_no }}" readonly required>
                     </div>
                     <div class="col-12">
                         <label for="diagnosis" class="form-label"><span class="ra">*</span> Diagnosis</label>
@@ -204,6 +234,7 @@
     <script>
         b_date = document.getElementById('birth_date');
         age_input = document.getElementById('age');
+        age_output = document.getElementById('age_mean');
 
         function set_age() {
             // get the age by subtracting years then inputing it in the age value
@@ -211,8 +242,47 @@
             const d_now = new Date();
             let year = d.getFullYear();
             let y_now = d_now.getFullYear();
-            // console.log(y_now - year);
-            age_input.value = (y_now - year);
+            console.log(d_now.getDate() - d.getDate());
+            let age = (y_now - year);
+            age_input.value = age;
+
+            if (age <= 1) {
+                age_output.innerHTML = "(It's a Baby)";
+            } else {
+                age_output.innerHTML = "";
+            }
+        }
+    </script>
+
+    {{-- calculate BMI body mas index --}}
+    <script>
+        const height_input = document.getElementById('height');
+        const weight_input = document.getElementById('weight');
+        const bmi_output = document.getElementById('BMI');
+        const bmi_cat_output = document.getElementById('bmi_cat');
+
+        function cal_bmi() {
+            var h_m = height_input.value / 100;
+            var h_s = (h_m * h_m);
+            var bmi = (weight_input.value / h_s);
+            bmi_output.value = bmi.toFixed(2);
+
+            // give bmi category
+            var bmi_category = '';
+            if (bmi <= 18.5) {
+                bmi_category = '<span class="badge text-bg-secondary">Underweight</span>';
+            }
+            if ((bmi >= 30)) {
+                bmi_category = '<span class="badge text-bg-danger">Obesity</span>';
+            }
+            if ((bmi >= 18.6) && (bmi <= 24.9)) {
+                bmi_category = '<span class="badge text-bg-primary">Normal weight</span>';
+            }
+            if ((bmi >= 25) && (bmi <= 29.9)) {
+                bmi_category = '<span class="badge text-bg-warning">Overweight</span>';
+            }
+
+            bmi_cat_output.innerHTML = bmi_category;
         }
     </script>
 

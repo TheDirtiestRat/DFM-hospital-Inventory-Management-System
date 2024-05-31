@@ -28,9 +28,10 @@
 
         <div class="row justify-content-between gap-2 m-0">
             <div class="col-auto">
-                <label for="medicine_id" class="form-label">Medicine Id</label>
+                <label for="medicine_id" class="form-label">PO No.</label>
+                {{-- <label for="medicine_id" class="form-label">Medicine Id</label> --}}
                 <input type="text" class="form-control" placeholder="999999" name="medicine_id" id="medicine_id"
-                    value="{{ $med_id }}" readonly required>
+                    value="{{ $med_id }}" required>
             </div>
             <div class="col-auto">
                 <div class="row gap-2">

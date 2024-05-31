@@ -239,6 +239,12 @@ class ReportsController extends Controller
             $adult = Patient::query()->whereBetween('age', [21, 59])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
             $old = Patient::query()->whereBetween('age', [60, 100])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
 
+            // get total by bmi groups
+            $underweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [0, 18.5])->count();
+            $obesity = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [30, 500])->count();
+            $normal_weight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [18.6, 24.9])->count();
+            $overweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [25, 29.9])->count();
+
             return view('pages.patientsReports', compact(
                 'new_patients',
                 'total_patients',
@@ -254,6 +260,11 @@ class ReportsController extends Controller
                 'old',
 
                 'month',
+
+                'underweight',
+                'obesity',
+                'normal_weight',
+                'overweight',
             ));
         }
 
@@ -280,6 +291,12 @@ class ReportsController extends Controller
         $old = Patient::query()->whereBetween('age', [60, 100])->count();
         // dd($total_despensed);
 
+        // get total by bmi groups
+        $underweight = Patient::query()->whereBetween('BMI', [0, 18.5])->count();
+        $obesity = Patient::query()->whereBetween('BMI', [30, 500])->count();
+        $normal_weight = Patient::query()->whereBetween('BMI', [18.6, 24.9])->count();
+        $overweight = Patient::query()->whereBetween('BMI', [25, 29.9])->count();
+
         return view('pages.patientsReports', compact(
             'new_patients',
             'total_patients',
@@ -294,6 +311,11 @@ class ReportsController extends Controller
             'adult',
             'old',
             'month',
+
+            'underweight',
+            'obesity',
+            'normal_weight',
+            'overweight',
         ));
     }
 
@@ -329,6 +351,12 @@ class ReportsController extends Controller
             $teen = Patient::query()->whereBetween('age', [11, 20])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
             $adult = Patient::query()->whereBetween('age', [21, 59])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
             $old = Patient::query()->whereBetween('age', [60, 100])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+
+            // get total by bmi groups
+            $underweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [0, 18.5])->count();
+            $obesity = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [30, 500])->count();
+            $normal_weight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [18.6, 24.9])->count();
+            $overweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [25, 29.9])->count();
         } else {
             // get total of patient listed
             $new_patients = Patient::query()->latest()->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
@@ -352,6 +380,12 @@ class ReportsController extends Controller
             $adult = Patient::query()->whereBetween('age', [21, 59])->count();
             $old = Patient::query()->whereBetween('age', [60, 100])->count();
             // dd($total_despensed);
+
+            // get total by bmi groups
+            $underweight = Patient::query()->whereBetween('BMI', [0, 18.5])->count();
+            $obesity = Patient::query()->whereBetween('BMI', [30, 500])->count();
+            $normal_weight = Patient::query()->whereBetween('BMI', [18.6, 24.9])->count();
+            $overweight = Patient::query()->whereBetween('BMI', [25, 29.9])->count();
         }
 
         return view('printables.patientsReports', compact(
@@ -369,6 +403,11 @@ class ReportsController extends Controller
             'old',
 
             'month',
+
+            'underweight',
+            'obesity',
+            'normal_weight',
+            'overweight',
         ));
     }
 
@@ -894,7 +933,7 @@ class ReportsController extends Controller
         $a_user = Auth::user();
         $user = User::find($a_user->id);
         // dd($i_val);
-        
+
         // read the notification selected
         $user->unreadNotifications()->where('id', '=', $n_id)->update(['read_at' => now()]);
 

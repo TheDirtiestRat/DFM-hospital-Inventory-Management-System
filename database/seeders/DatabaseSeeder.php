@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Doctor;
 use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\User;
@@ -38,5 +39,14 @@ class DatabaseSeeder extends Seeder
 
         // create fake medicines
         Medicine::factory(45)->create();
+
+        // create fake doctors
+        Doctor::factory(8)->create();
+
+        // seeders
+        $this->call(
+            BarangaySeeder::class
+            // add if theres more
+        );
     }
 }

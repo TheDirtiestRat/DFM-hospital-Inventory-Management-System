@@ -118,7 +118,7 @@
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                         <span class="visually-hidden">Toggle Dropdown</span>
                                     </button>
-                                    <ul class="dropdown-menu">
+                                    <ul class="dropdown-menu overflow-auto" style="height: 260px">
                                         {{-- show only list of blood types have --}}
                                         @forelse ($barangays as $barangay)
                                             <li><a class="dropdown-item"

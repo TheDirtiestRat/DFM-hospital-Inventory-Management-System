@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -65,6 +66,11 @@ class UserController extends Controller
             'type' => 'required',
         ]);
 
+        if ($request->type == "ADMIN") {
+            // redirect back
+            return redirect()->route('user.index')->with('error', 'Asswhole.');
+        }
+
         // check if the user already exist
         // if (!empty(User::query()->where('name', $request->name)->where('email', $request->email)->first())) {
         //     return redirect()->back()->with('warning', 'User Already Exist.');
@@ -120,8 +126,15 @@ class UserController extends Controller
             'type' => 'required',
         ]);
 
+
+        // if ($request->type == "ADMIN" && Auth::user()->type != "ADMIN") {
+        //     // redirect back
+        //     dd('gotcha bitch');
+        //     return redirect()->route('user.show', Auth::user()->id)->with('error', 'Asswhole trying to be smart ass.');
+        // }
+
         $data = $request->all();
-        // dd($data);
+        dd($data);
 
         // store the data in the database user table
         $user = User::query()->where('id', $id)->update([

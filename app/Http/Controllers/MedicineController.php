@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\RecordDespenseMedicine;
 use App\Models\BatchMedicine;
 use App\Models\DespenseMedicine;
+use App\Models\Doctor;
 use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\PatientCase;
@@ -170,9 +171,18 @@ class MedicineController extends Controller
     public function despense_medicine()
     {
         // get the medicine records
-        $medicines = Medicine::query()->latest()->limit(6)->get();
+        $medicines = Medicine::query()->latest()->limit(18)->get();
 
-        return view('medicine.despense', compact('medicines'));
+        // list of doctors
+        $doctors = Doctor::query()->latest()->get(['full_name', 'license_no']);
+
+        $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->latest('patient_cases.created_at')->limit(8)->get([
+            'patients.*',
+            'patient_cases.*',
+        ]);
+
+        return view('medicine.full-page-despense', compact('medicines', 'doctors', 'patients'));
+        // return view('medicine.despense', compact('medicines'));
     }
 
     // store new data through Importing CSV
@@ -201,7 +211,7 @@ class MedicineController extends Controller
         for ($i = 0; $i < count($fileContents); $i++) {
             if ($i != 0) {
                 $data = str_getcsv($fileContents[$i]);
-
+                $data =  mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1');
                 // dd($data);
 
                 if (count($data) <= 7 || $data == null) {
@@ -550,19 +560,62 @@ class MedicineController extends Controller
         return Pdf::loadHTML('<h1>Test</h1>')->setPaper('a4', 'landscape')->download('myfile.pdf');
     }
 
-    // despense the medicine and record it in the data base
-    public function record_despense_medicine(Request $request)
+    public function despense_medicine_reciept(Request $request)
     {
+
         // get the input data required
         $request->validate([
             'despenser' => 'required',
+            'patient_case_id' => 'required|exists:patients,case_no',
+            'doc_license_no' => 'required',
+            'diagnosis' => 'required',
+            'medicine' => 'required',
+            'quantity' => 'required',
+        ]);
+
+        // dd($request->input());
+
+        // get patient info
+        $patient = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.case_no',  $request->input('patient_case_id'))->latest('patient_cases.created_at')->first([
+            'patients.*',
+            'patient_cases.*',
+        ]);
+
+        // get doctor info
+        $doctor = Doctor::query()->where('license_no', $request->input('doc_license_no'))->first();
+
+        // data today
+        $data_today = date('M d, Y');
+
+        // medicine info
+        $med_ids = [];
+        foreach ($request->medicine as $key => $value) {
+            $d = $value;
+            array_push($med_ids, $d);
+        }
+        $medicines = Medicine::query()->whereIn('medicine_id', $med_ids)->get(['medicine_id', 'name', 'mesurement']);
+
+        // dd($medicines);
+
+        return view('medicine.despense-reciept', compact('request', 'patient', 'medicines', 'data_today', 'doctor'));
+    }
+
+    // despense the medicine and record it in the data base
+    public function record_despense_medicine(Request $request)
+    {
+        // dd($request->input());
+
+        // get the input data required
+        $request->validate([
+            'despenser' => 'required',
+            'doc_license_no' => 'required',
             'patient_case_id' => 'required|exists:patients,case_no',
             'diagnosis' => 'required',
             'medicine' => 'required',
             'quantity' => 'required',
         ]);
 
-        // dd($request->input('medicine'));
+        // dd($request->input());
 
         // get patient info
         $patient = Patient::query()->where('case_no', $request->input('patient_case_id'))->first();
@@ -581,15 +634,19 @@ class MedicineController extends Controller
                 'medicine' => $request->input('medicine')[$i],
                 'diagnosis' => $request->input('diagnosis'),
                 'quantity' => $request->input('quantity')[$i],
+                'doctor' => $request->input('doc_license_no'),
             ];
 
             // reduce the quantity of the medicine pick base by the quantity given to the patient
             $medicine = Medicine::query()->where('medicine_id', $request->input('medicine')[$i])->get(['medicine_id', 'name', 'quantity'])->first();
-            $updated_medicine = Medicine::query()->where('medicine_id', $medicine->medicine_id)->where('quantity', '>=', 0)->update([
+            $updated_medicine = Medicine::query()->where('medicine_id', $medicine->medicine_id)->where('quantity', '>=', $inputs['quantity'])->update([
                 'quantity' => $medicine->quantity - $inputs['quantity'],
             ]);
 
-            // dd($inputs);
+            if (!$updated_medicine) {
+                // dd('quantity too big');
+                return redirect()->route('despenseMedicine')->with('error', 'Medicine ' . $medicine->name . ' has less quantity to despense.');
+            }
 
             array_push($data, $inputs);
         }
@@ -602,7 +659,8 @@ class MedicineController extends Controller
         }
 
         // redirect back
-        return redirect()->route('despenseMedicine')->with('success', 'Medicine Despensed To the Patient.')->with('patient', $patient->id)->with('medicines', $request->input('medicine'))->with('quantities', $request->input('quantity'));
+        return redirect()->route('despenseMedicine')->with('success', 'Medicines are Despensed To the Patient.');
+        // return redirect()->route('despenseMedicine')->with('success', 'Medicine Despensed To the Patient.')->with('patient', $patient->id)->with('medicines', $request->input('medicine'))->with('quantities', $request->input('quantity'));
     }
 
     public function get_patient_info(Request $request)
@@ -620,6 +678,19 @@ class MedicineController extends Controller
         }
 
         return view("components.patientInfoDespense", compact('patient'));
+    }
+
+    public function get_patient_datalist(Request $request)
+    {
+        // get the data
+        if ($request->ajax()) {
+            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.case_no', 'like', '%' . $request->case_no . '%')->limit(8)->get([
+                'patients.*',
+                'patient_cases.*',
+            ]);
+        }
+
+        return view("components.patient_case_no-despense-datalist", compact('patients'));
     }
 
     /**

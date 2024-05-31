@@ -23,6 +23,11 @@ class Patient extends Model
         'birth_place',
         'blood_type',
 
+        // physical info
+        'height',
+        'weight',
+        'BMI',
+
         'gender',
         'religion',
         'citizenship',

@@ -38,11 +38,11 @@
             <div class="row">
                 <div class="col-md-6">
                     {{-- show if user is log-in --}}
-                    @if (Auth::check())
+                    {{-- @if (Auth::check())
                         <span class="text-success">Is Login</span>
                     @else
                         <span class="text-muted">Offline</span>
-                    @endif
+                    @endif --}}
 
                     <p><strong>Active :</strong>
                         @if ($user->is_login == 1)

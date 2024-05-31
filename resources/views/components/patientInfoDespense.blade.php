@@ -1,5 +1,5 @@
 @if (!empty($patient))
-    <div class="text-bg-primary rounded-3 p-3">
+    <div class="text-bg-primary rounded-3 p-2 w-100">
         {{-- patient information --}}
         <div class="row g-2">
             <div class="col-12">
@@ -17,11 +17,11 @@
                     <strong>Age: </strong>{{ $patient->age }}
                 </p>
             </div>
-            <div class="col-12">
+            {{-- <div class="col-12">
                 <p class="m-0">
                     <strong>Blood Type: </strong>{{ $patient->blood_type }}
                 </p>
-            </div>
+            </div> --}}
             {{-- <div class="col-auto">
                 {{ $patient->first_name . ' ' . $patient->mid_name . ' ' . $patient->last_name }}
             </div> --}}

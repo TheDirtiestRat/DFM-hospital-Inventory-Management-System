@@ -28,6 +28,10 @@ return new class extends Migration
             $table->string('religion');
             $table->string('citizenship');
 
+            $table->float('height');
+            $table->float('weight');
+            $table->float('BMI');
+
             $table->text('contact_no');
             $table->string('barangay');
             $table->string('address');

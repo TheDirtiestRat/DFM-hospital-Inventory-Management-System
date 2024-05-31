@@ -237,6 +237,20 @@
                             </div>
                         </div>
                     </div>
+                    {{-- by bmi category --}}
+                    <div class="card rounded-3 mb-2">
+                        <div class="card-header">
+                            <h5 class="m-0">Body Mas Index</h5>
+                        </div>
+                        <div class="card-body rounded-4">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-secondary">Underweight ({{ $underweight }})</button>
+                                <button class="btn btn-primary">Normal Weight ({{ $normal_weight }})</button>
+                                <button class="btn btn-warning">Overweight ({{ $overweight }})</button>
+                                <button class="btn btn-danger">Obesity ({{ $obesity }})</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col p-2">
                     <h3>New Patients</h3>

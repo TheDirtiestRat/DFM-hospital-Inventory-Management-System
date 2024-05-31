@@ -7,7 +7,8 @@
     {{-- alert --}}
     @include('components.alert')
 
-    <form action="{{ route('patient.update', $patient->id) }}" method="post" class="needs-validations" enctype="multipart/form-data" novalidat>
+    <form action="{{ route('patient.update', $patient->id) }}" method="post" class="needs-validations"
+        enctype="multipart/form-data" novalidat>
         {{-- for validation --}}
         @csrf
         @method('PUT')
@@ -28,7 +29,8 @@
                     </div>
                     <div class="col-auto">
                         <label for="time_arrival" class="form-label">Time of Arrival</label>
-                        <input type="time" class="form-control" name="time_arrival" id="time_arrival" value="{{ $patient_case->arrive_time }}">
+                        <input type="time" class="form-control" name="time_arrival" id="time_arrival"
+                            value="{{ $patient_case->arrive_time }}">
                     </div>
                 </div>
             </div>
@@ -54,15 +56,16 @@
                     </div>
                     <div class="col">
                         <label for="middlename" class="form-label">Middle Name</label>
-                        <input type="text" class="form-control" placeholder="Middle Name" name="mid_name"
-                            id="middlename" value="{{ $patient->mid_name }}">
+                        <input type="text" class="form-control" placeholder="Middle Name" name="mid_name" id="middlename"
+                            value="{{ $patient->mid_name }}">
                     </div>
                 </div>
 
                 <div class="row g-2 m-2">
                     <div class="col-md col-12">
                         <label for="birth_date" class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" name="birthDate" id="birth_date" value="{{ $patient->birth_date }}">
+                        <input type="date" class="form-control" name="birthDate" id="birth_date"
+                            value="{{ $patient->birth_date }}">
                     </div>
                     <div class="col-md-auto">
                         <label for="age" class="form-label">* Age</label>
@@ -94,6 +97,29 @@
                     </div>
                 </div>
 
+                {{-- Physical info --}}
+                <div class="row g-2 m-2">
+                    <div class="col-md">
+                        <label for="height" class="form-label"><span class="ra"><span
+                                    class="ra">*</span></span>
+                            Height</label>
+                        <input type="number" class="form-control" onkeyup="cal_bmi()" name="height" id="height"
+                            value="{{ $patient->height }}" required>
+                    </div>
+                    <div class="col-md">
+                        <label for="weight" class="form-label"><span class="ra"><span
+                                    class="ra">*</span></span>
+                            Weight</label>
+                        <input type="number" class="form-control" onkeyup="cal_bmi()" name="weight" id="weight"
+                            value="{{ $patient->weight }}" autocomplete="true" required>
+                    </div>
+                    <div class="col-md">
+                        <label for="BMI" class="form-label">BMI  <span id="bmi_cat"></span></label>
+                        <input type="number" class="form-control" placeholder="" name="BMI" id="BMI"
+                            value="{{ $patient->BMI }}" readonly>
+                    </div>
+                </div>
+
                 <div class="row g-2 m-2">
                     <div class="col-md col-12">
                         <label for="birth_place" class="form-label">Place of Birth</label>
@@ -113,7 +139,8 @@
                         <div class="input-group">
                             <span class="input-group-text" id="basic-addon1">63+</span>
                             <input type="text" class="form-control" placeholder="09298568072" aria-label="Username"
-                                name="contact_number" id="contact_number" aria-describedby="basic-addon1" value="{{ $patient->contact_no }}">
+                                name="contact_number" id="contact_number" aria-describedby="basic-addon1"
+                                value="{{ $patient->contact_no }}">
                         </div>
                     </div>
                     <div class="col">
@@ -172,5 +199,51 @@
     <script>
         document.getElementById('blood_type').value = '{{ $patient->blood_type }}';
         document.getElementById('gender').value = '{{ $patient->gender }}';
+    </script>
+
+    {{-- calculate BMI body mas index --}}
+    <script>
+        const height_input = document.getElementById('height');
+        const weight_input = document.getElementById('weight');
+        const bmi_output = document.getElementById('BMI');
+        const bmi_cat_output = document.getElementById('bmi_cat');
+
+        function cal_bmi() {
+            var h_m = height_input.value / 100;
+            var h_s = (h_m * h_m);
+            var bmi = (weight_input.value / h_s);
+            bmi_output.value = bmi.toFixed(2);
+
+            // give bmi category
+            var bmi_category = '';
+            if (bmi <= 18.5) {
+                bmi_category = '<span class="badge text-bg-secondary">Underweight</span>';
+            }
+            if ((bmi >= 30)) {
+                bmi_category = '<span class="badge text-bg-danger">Obesity</span>';
+            }
+            if ((bmi >= 18.6) && (bmi <= 24.9)) {
+                bmi_category = '<span class="badge text-bg-primary">Normal weight</span>';
+            }
+            if ((bmi >= 25) && (bmi <= 29.9)) {
+                bmi_category = '<span class="badge text-bg-warning">Overweight</span>';
+            }
+
+            bmi_cat_output.innerHTML = bmi_category;
+        }
+    </script>
+
+    {{-- calculate BMI body mas index --}}
+    <script>
+        const height_input = document.getElementById('height');
+        const weight_input = document.getElementById('weight');
+        const bmi_output = document.getElementById('BMI');
+
+        function cal_bmi() {
+            var h_m = height_input.value / 100;
+            var h_s = (h_m * h_m);
+            var bmi = (weight_input.value / h_s);
+            bmi_output.value = bmi.toFixed(2);
+        }
     </script>
 @endsection

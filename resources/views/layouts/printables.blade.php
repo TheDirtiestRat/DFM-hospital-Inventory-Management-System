@@ -9,6 +9,14 @@
 
     @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="{{ url('bootstrap-icons/font/bootstrap-icons.css') }}">
+
+    <style>
+        @media print {
+            .noprint {
+                visibility: hidden;
+            }
+        }
+    </style>
 </head>
 
 <body>
