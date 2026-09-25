@@ -1,67 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# DFM-hospital-Inventory-Management-System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Overview
 
-## About Laravel
+DFM Hospital Inventory Management System is a Laravel web application for managing the medical supplies, medicines, and other stock used by a hospital. It provides a central place for authorized staff to record inventory, monitor stock levels, and keep supply information accurate and up to date.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+The application helps replace manual stock tracking with a searchable, organized workflow. Staff can use it to understand what is available, identify items that need replenishment, and maintain a history of inventory activity.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Main functions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Inventory management** – Add, view, update, and remove inventory records.
+- **Item organization** – Maintain item details such as names, categories, quantities, and other relevant information.
+- **Stock monitoring** – Review current quantities and quickly identify low or unavailable stock.
+- **Inventory transactions** – Record stock received, issued, or adjusted so quantity changes can be tracked.
+- **Search and filtering** – Find supplies efficiently instead of searching through paper records or spreadsheets.
+- **Dashboard and summaries** – View useful inventory information at a glance.
+- **User access** – Restrict management functions to authenticated and authorized users.
 
-## Learning Laravel
+## Benefits
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+This system supports hospital staff by improving stock visibility, reducing data-entry errors, helping prevent stockouts, and making routine inventory administration faster. It can also provide a clearer record of how supplies move through the organization.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Technology
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- [Laravel](https://laravel.com/) PHP framework
+- PHP
+- Database supported by Laravel
+- Blade templates and web-based UI
 
-## Laravel Sponsors
+## Installation
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+1. Clone the repository and open the project directory.
+2. Install PHP dependencies:
 
-### Premium Partners
+	```bash
+	composer install
+	```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+3. Create the environment file and configure the database in `.env`:
 
-## Contributing
+	```bash
+	cp .env.example .env
+	php artisan key:generate
+	```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. Create the database tables:
 
-## Code of Conduct
+	```bash
+	php artisan migrate
+	```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+5. Start the development server:
 
-## Security Vulnerabilities
+	```bash
+	php artisan serve
+	```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Open the URL shown by Artisan in a web browser and sign in with an application user.
+
+## Security
+
+Do not commit `.env` files, passwords, database credentials, or other private configuration values. Use the application's authentication and authorization controls when managing inventory data.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# DFM-hospital-Inventory-Management-System
+This project uses the license specified by the project owner. Laravel is open-source software licensed under the [MIT license](https://opensource.org/licenses/MIT).
