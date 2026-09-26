@@ -50,6 +50,26 @@ body {
     overflow-y: scroll;
 }
 
+.sidebar-section-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.sidebar-section-toggle[aria-expanded="false"] .sidebar-section-icon {
+    transform: rotate(-90deg);
+}
+
+.image-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f3f5;
+    color: #6c757d;
+}
+
+.image-fallback .bi {
+    font-size: 2rem;
+}
+
 .candidate-card {
     width: 200px;
     height: 350px;

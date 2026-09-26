@@ -1,7 +1,7 @@
 <div class="row justify-content-center g-2 mt-2">
     @forelse ($medicines as $medicine)
         {{-- card --}}
-        <div class="col-md-4">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card rounded-4 shadow-sm h-100">
                 <div class="card-header">
                     @php
@@ -29,7 +29,8 @@
                     <div class="row g-2">
                         <div class="col-md-auto col-12 text-center">
                             <img src="{{ asset('storage/medicine img/' . $medicine->photo) }}"
-                                class="img-fill border rounded-4" alt="" width="100" height="100">
+                                class="img-fill border rounded-4" alt="{{ $medicine->name }}"
+                                data-fallback-icon="bi-capsule" width="100" height="100" loading="lazy">
                         </div>
                         <div class="col-md-6">
                             <h5 class="card-title text-truncate m-0 ">{{ $medicine->name }}</h5>

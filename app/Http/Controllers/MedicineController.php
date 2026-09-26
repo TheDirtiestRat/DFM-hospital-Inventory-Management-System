@@ -37,37 +37,31 @@ class MedicineController extends Controller
 
     public function get_meds_list(Request $request)
     {
-        // $data_key = $request->all();
-        if ($request->key == "get_expired") {
-            $expired_meds = Medicine::query()->selectRaw('medicine_id, datediff(`expired_date`, date(`created_at`))')->whereRaw('datediff(`expired_date`, date(`created_at`)) <= 0')->get();
-            $exp_meds = array();
-            foreach ($expired_meds as $key => $value) {
-                array_push($exp_meds, $value->medicine_id);
-            }
-            // dd($exp_meds);
+        $validated = $request->validate([
+            'key' => 'required|in:get_expired,to_expire,get_not_expired,get_by_batch',
+            'batch' => 'required_if:key,get_by_batch',
+        ]);
 
-            $medicines = Medicine::query()->whereIn('medicine_id', $exp_meds)->paginate(16);
-        } else if ($request->key == 'to_expire') {
-            $not_expired_meds = Medicine::query()->selectRaw('medicine_id, datediff(`expired_date`, date(`created_at`))')->whereRaw('datediff(`expired_date`, date(`created_at`)) < 30')->get();
-            $not_exp_meds = array();
-            foreach ($not_expired_meds as $key => $value) {
-                array_push($not_exp_meds, $value->medicine_id);
-            }
-            $medicines = Medicine::query()->whereIn('medicine_id', $not_exp_meds)->paginate(16);
-        } else if ($request->key == 'get_not_expired') {
-            $not_expired_meds = Medicine::query()->selectRaw('medicine_id, datediff(`expired_date`, date(`created_at`))')->whereRaw('datediff(`expired_date`, date(`created_at`)) >= 60')->get();
-            $not_exp_meds = array();
-            foreach ($not_expired_meds as $key => $value) {
-                array_push($not_exp_meds, $value->medicine_id);
-            }
-            $medicines = Medicine::query()->whereIn('medicine_id', $not_exp_meds)->paginate(16);
-        } else if ($request->key == 'get_by_batch' && !empty($request->batch)) {
-            $medicines = Medicine::query()->where('batch_no', $request->batch)->paginate(16);
+        $today = today();
+        $query = Medicine::query();
+
+        switch ($validated['key']) {
+            case 'get_expired':
+                $query->where('expired_date', '<=', $today->toDateString());
+                break;
+            case 'to_expire':
+                $query->where('expired_date', '>', $today->toDateString())
+                    ->where('expired_date', '<=', $today->copy()->addDays(30)->toDateString());
+                break;
+            case 'get_not_expired':
+                $query->where('expired_date', '>=', $today->copy()->addDays(60)->toDateString());
+                break;
+            case 'get_by_batch':
+                $query->where('batch_no', $validated['batch']);
+                break;
         }
 
-        // dd($medicines);
-        $medicines->appends(['key' => $request->key]);
-        $medicines->appends(['batch' => $request->batch]);
+        $medicines = $query->latest()->paginate(16)->withQueryString();
 
         // list of all the batches
         $batches = Medicine::query()->selectRaw('count(id) as total, batch_no')->groupBy('batch_no')->get('batch_no');

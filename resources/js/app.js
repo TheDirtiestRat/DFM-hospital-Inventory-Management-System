@@ -8,6 +8,37 @@ import '../css/styles.css';
 // Import custom Javascript
 import '../js/sidebar.js';
 
+const showImageFallback = image => {
+    if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied) {
+        return;
+    }
+
+    image.dataset.fallbackApplied = 'true';
+
+    const fallback = document.createElement('span');
+    fallback.className = `${image.className} image-fallback`;
+    fallback.setAttribute('role', 'img');
+    fallback.setAttribute('aria-label', image.alt || 'Image unavailable');
+    fallback.style.width = `${image.width || 48}px`;
+    fallback.style.height = `${image.height || 48}px`;
+
+    const icon = document.createElement('i');
+    icon.className = `bi ${image.dataset.fallbackIcon || 'bi-image'}`;
+    icon.setAttribute('aria-hidden', 'true');
+    fallback.append(icon);
+    image.replaceWith(fallback);
+};
+
+document.addEventListener('error', event => {
+    showImageFallback(event.target);
+}, true);
+
+for (const image of document.images) {
+    if (image.complete && image.naturalWidth === 0) {
+        showImageFallback(image);
+    }
+}
+
 // import flatpickr from "flatpickr";
 // window.flatpickr = flatpickr;
 

@@ -1,6 +1,6 @@
 <div class="row g-3">
     @forelse ($medicines as $medicine)
-        <div class="col-md-4">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card h-100" style="">
                 <div class="card-header">
                     @php
@@ -24,7 +24,8 @@
                     <div class="row g-1 m-0">
                         <div class="col-auto">
                             <img src="{{ asset('storage/medicine img/' . $medicine->photo) }}"
-                                class="img-fill border rounded-4" alt="" width="100" height="100">
+                                class="img-fill border rounded-4" alt="{{ $medicine->name }}"
+                                data-fallback-icon="bi-capsule" width="100" height="100" loading="lazy">
                         </div>
                         <div class="col-6">
                             <h5 class="card-title text-truncate m-0 ">{{ $medicine->name }}</h5>

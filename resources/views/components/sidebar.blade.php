@@ -53,16 +53,16 @@
 
             @if (Auth::user()->type == $user_types[2] || Auth::user()->type == $user_types[0])
                 <li class="nav-item">
-                    <a class="btn btn-primary w-100 text-start" data-bs-toggle="collapse" href="#collapseExample"
-                        role="button" aria-expanded="false" aria-controls="collapseExample">
-                        <i class="bi bi-caret-right-fill"></i>
+                    <a class="btn btn-primary w-100 text-start sidebar-section-toggle" data-bs-toggle="collapse" href="#collapseExample"
+                        role="button" aria-expanded="true" aria-controls="collapseExample">
+                        <i class="bi bi-chevron-down sidebar-section-icon"></i>
                         Patients
                     </a>
                 </li>
 
                 <div class="nav-item">
                     {{-- collapse content --}}
-                    <div class="collapse" id="collapseExample">
+                    <div class="collapse show" id="collapseExample">
                         <ul class="nav gap-2  nav-pills flex-column p-1">
                             <li class="nav-item">
                                 <a href="{{ route('patient.create') }}" class="btn btn-sm btn-light text-start w-100">
@@ -108,16 +108,16 @@
 
             @if (Auth::user()->type == $user_types[1] || Auth::user()->type == $user_types[0])
                 <li class="nav-item">
-                    <a class="btn btn-primary w-100 text-start" data-bs-toggle="collapse" href="#collapseExample2"
-                        role="button" aria-expanded="false" aria-controls="collapseExample2">
-                        <i class="bi bi-caret-right-fill"></i>
+                    <a class="btn btn-primary w-100 text-start sidebar-section-toggle" data-bs-toggle="collapse" href="#collapseExample2"
+                        role="button" aria-expanded="true" aria-controls="collapseExample2">
+                        <i class="bi bi-chevron-down sidebar-section-icon"></i>
                         Medicines
                     </a>
                 </li>
 
                 <div class="nav-item">
                     {{-- collapse content --}}
-                    <div class="collapse" id="collapseExample2">
+                    <div class="collapse show" id="collapseExample2">
                         <ul class="nav gap-2  nav-pills flex-column p-1">
                             <li class="nav-item">
                                 <a href="{{ route('medicine.create') }}" class="btn btn-sm btn-light text-start w-100">
@@ -204,16 +204,16 @@
 
             @if (Auth::user()->type == $user_types[2] || Auth::user()->type == $user_types[0])
                 <li class="nav-item">
-                    <a class="btn btn-primary w-100 text-start" data-bs-toggle="collapse" href="#collapseDoctor"
-                        role="button" aria-expanded="false" aria-controls="collapseDoctor">
-                        <i class="bi bi-caret-right-fill"></i>
+                    <a class="btn btn-primary w-100 text-start sidebar-section-toggle" data-bs-toggle="collapse" href="#collapseDoctor"
+                        role="button" aria-expanded="true" aria-controls="collapseDoctor">
+                        <i class="bi bi-chevron-down sidebar-section-icon"></i>
                         Doctors
                     </a>
                 </li>
 
                 <div class="nav-item">
                     {{-- collapse content --}}
-                    <div class="collapse" id="collapseDoctor">
+                    <div class="collapse show" id="collapseDoctor">
                         <ul class="nav gap-2  nav-pills flex-column p-1">
                             {{-- <li class="nav-item">
                                 <a href="{{ route('doctors.create') }}" class="btn btn-sm btn-light text-start w-100">
@@ -263,16 +263,16 @@
             @endif
 
             <li class="nav-item">
-                <a class="btn btn-primary w-100 text-start" data-bs-toggle="collapse" href="#collapseExample3"
-                    role="button" aria-expanded="false" aria-controls="collapseExample3">
-                    <i class="bi bi-caret-right-fill"></i>
+                <a class="btn btn-primary w-100 text-start sidebar-section-toggle" data-bs-toggle="collapse" href="#collapseExample3"
+                    role="button" aria-expanded="true" aria-controls="collapseExample3">
+                    <i class="bi bi-chevron-down sidebar-section-icon"></i>
                     Reports
                 </a>
             </li>
 
             <div class="nav-item">
                 {{-- collapse content --}}
-                <div class="collapse" id="collapseExample3">
+                <div class="collapse show" id="collapseExample3">
                     <ul class="nav gap-2  nav-pills flex-column p-1">
                         @if (Auth::user()->type == $user_types[0])
                             <li class="nav-item">
@@ -361,16 +361,16 @@
             </div>
 
             <li class="nav-item">
-                <a class="btn btn-primary w-100 text-start" data-bs-toggle="collapse" href="#collapseExample4"
-                    role="button" aria-expanded="false" aria-controls="collapseExample4">
-                    <i class="bi bi-caret-right-fill"></i>
+                <a class="btn btn-primary w-100 text-start sidebar-section-toggle" data-bs-toggle="collapse" href="#collapseExample4"
+                    role="button" aria-expanded="true" aria-controls="collapseExample4">
+                    <i class="bi bi-chevron-down sidebar-section-icon"></i>
                     User Management
                 </a>
             </li>
 
             <div class="nav-item">
                 {{-- collapse content --}}
-                <div class="collapse" id="collapseExample4">
+                <div class="collapse show" id="collapseExample4">
                     <ul class="nav gap-2  nav-pills flex-column p-1">
                         @if (Auth::user()->type == $user_types[0])
                             <li class="nav-item">

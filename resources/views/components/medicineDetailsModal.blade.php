@@ -8,7 +8,8 @@
 
     {{-- image --}}
     <div class="col-md-4">
-        <img src="{{ asset('storage/medicine img/'. $medicine->photo) }}" class="img-fill border rounded-4 shadow " alt=""
+        <img src="{{ asset('storage/medicine img/'. $medicine->photo) }}" class="img-fill border rounded-4 shadow "
+            alt="{{ $medicine->name }}" data-fallback-icon="bi-capsule" loading="lazy"
             id="outputImage" width="250px" height="250px">
     </div>
     {{-- information --}}
