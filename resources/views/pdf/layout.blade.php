@@ -206,7 +206,11 @@
             <tr>
                 <td class="text-center ">
                     {{-- <h1>Test</h1> --}}
-                    <img src="{{ $img_logo }}" alt="" width="60">
+                    @if (!empty($img_logo) && is_file($img_logo))
+                        <img src="{{ $img_logo }}" alt="" width="60">
+                    @else
+                        <strong style="font-size: 24px;">DFM</strong>
+                    @endif
                 </td>
                 <td class="text-start ">
                     <h3 class="no_margin">@include('components.title')</h3>

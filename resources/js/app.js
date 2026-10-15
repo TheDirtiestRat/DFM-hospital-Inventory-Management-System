@@ -7,6 +7,7 @@ import '../css/styles.css';
 
 // Import custom Javascript
 import '../js/sidebar.js';
+import './certificates.js';
 
 const showImageFallback = image => {
     if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied) {

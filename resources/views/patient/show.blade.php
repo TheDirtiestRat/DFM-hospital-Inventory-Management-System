@@ -104,6 +104,10 @@
             </div>
             <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#AddModal"><i
                     class="bi bi-prescription2"></i> New Diagnosis</button>
+            <a class="btn btn-outline-primary w-100 mt-2"
+                href="{{ route('certificates.index', ['patient' => $patient->id]) }}">
+                <i class="bi bi-file-earmark-medical"></i> Print Certificate
+            </a>
             <div class="row">
                 <div class="col-12">
                     <h3>Patient Case</h3>

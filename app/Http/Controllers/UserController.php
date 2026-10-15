@@ -134,7 +134,7 @@ class UserController extends Controller
         // }
 
         $data = $request->all();
-        dd($data);
+        // dd($data);
 
         // store the data in the database user table
         $user = User::query()->where('id', $id)->update([

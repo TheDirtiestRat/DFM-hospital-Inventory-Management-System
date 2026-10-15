@@ -82,6 +82,12 @@
                                     By Barangay
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('certificates.index') }}" class="btn btn-sm btn-light text-start w-100">
+                                    <i class="bi bi-file-earmark-medical"></i>
+                                    Print Certificates
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>

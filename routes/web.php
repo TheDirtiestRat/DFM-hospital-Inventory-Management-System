@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\MedicineController;
+use App\Http\Controllers\PatientCertificateController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RequestAssistanceController;
@@ -42,6 +43,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('patient', PatientController::class);
         Route::get('/patient_details', [PatientController::class, 'show_patient_partial_details']);
         Route::get('/patientsByBarangay', [PatientController::class, 'by_barangay']);
+        Route::get('/patient-certificates', [PatientCertificateController::class, 'index'])->name('certificates.index');
+        Route::post('/patient-certificates/{patient}/print', [PatientCertificateController::class, 'print'])->name('certificates.print');
 
         // modal details
         Route::get('/barangay_details', [PatientController::class, 'barangay_detail_sum']);
@@ -60,7 +63,6 @@ Route::middleware('auth')->group(function () {
         //     dd('test');
         // });
     });
-
 
     // pharmacist routes
     Route::middleware('user.type:PHARMACIST,ADMIN')->group(function () {
@@ -91,7 +93,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/printMedicineReports', [ReportsController::class, 'printable_medicine_report']);
     });
 
-
     Route::middleware('user.type:ADMIN')->group(function () {
         // request freatures
         Route::resource('assistanceRequest', RequestAssistanceController::class);
@@ -121,7 +122,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/patientRecordsReport', [ReportsController::class, 'patient_records_report']);
         // prints
         Route::get('/patientRecordsReportsPDF', [ReportsController::class, 'print_pdf_patientRecords_reports']);
-        
+
     });
 
     Route::middleware('user.type:PHARMACIST,ADMIN')->group(function () {
@@ -139,7 +140,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/importMedsData', [MedicineController::class, 'import']);
         // export data
         Route::get('/exportData', [MedicineController::class, 'export']);
-       
+
         // reports
         Route::get('/medicineRecordsReport', [ReportsController::class, 'medicine_despensed_report']);
         // prints
@@ -147,7 +148,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/medicineRecieptPDF', [MedicineController::class, 'pdf_reciept_despense_medicine']);
         // Route::get('/medicineRecieptPDF/{id}{medicines}{quantities}', [MedicineController::class, 'pdf_reciept_despense_medicine'])->name('medicineRecieptPDF');
-        
+
         Route::get('/test_listener', function () {
             return redirect('medicineReportsPDF');
         });
@@ -156,10 +157,10 @@ Route::middleware('auth')->group(function () {
     // user management
     // user management
     Route::resource('user', UserController::class, [
-        'only' => ['index', 'create', 'store', 'destroy']
+        'only' => ['index', 'create', 'store', 'destroy'],
     ])->middleware('user.type:ADMIN');
     Route::resource('user', UserController::class, [
-        'only' => ['show', 'edit', 'update']
+        'only' => ['show', 'edit', 'update'],
     ])->middleware('user.type:PHARMACIST,RECEPTIONIST,ADMIN');
 
     // Route::resource('user', UserController::class);
