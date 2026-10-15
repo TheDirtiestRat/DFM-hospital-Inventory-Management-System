@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 
 class AuthenticationController extends Controller
 {
@@ -29,6 +28,8 @@ class AuthenticationController extends Controller
 
         // authenticate user
         if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
             // check user types to log in to its proper homepage
             $url = "/dashboard";
             if (Auth::user()->type == "PHARMACIST") {
@@ -45,10 +46,11 @@ class AuthenticationController extends Controller
         return back()->with('error', 'Failed to login. (username or password is incorrect)');
     }
 
-    public function logout_user () {
+    public function logout_user (Request $request) {
         // log out the user
         Auth::logout();
-        Session::flush();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect('/login')->with('info', 'user has logout.');
     }
 

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -63,7 +62,7 @@ class UserController extends Controller
             'username' => 'required|unique:users,name',
             'password' => 'required|confirmed',
             'email' => 'required|unique:users,email',
-            'type' => 'required',
+            'type' => 'required|in:PHARMACIST,RECEPTIONIST',
         ]);
 
         if ($request->type == "ADMIN") {
@@ -119,30 +118,18 @@ class UserController extends Controller
     {
         // get the input data required
         $request->validate([
-            'username' => 'required',
+            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'name')->ignore($id)],
             'password' => 'required|confirmed',
-            // 'password' => 'required',
-            'email' => 'required',
-            'type' => 'required',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
+            'type' => 'required|in:PHARMACIST,RECEPTIONIST,ADMIN',
         ]);
 
-
-        // if ($request->type == "ADMIN" && Auth::user()->type != "ADMIN") {
-        //     // redirect back
-        //     dd('gotcha bitch');
-        //     return redirect()->route('user.show', Auth::user()->id)->with('error', 'Asswhole trying to be smart ass.');
-        // }
-
-        $data = $request->all();
-        // dd($data);
-
-        // store the data in the database user table
-        $user = User::query()->where('id', $id)->update([
-            'name' => $data['username'],
-            'email' => $data['email'],
-            // 'password' => $data['password'],
-            'type' => $data['type'],
-        ]);
+        $user = User::query()->findOrFail($id);
+        $user->name = $request->input('username');
+        $user->email = $request->input('email');
+        $user->password = $request->input('password');
+        $user->type = $request->input('type');
+        $user->save();
 
         // redirect back
         return redirect()->route('user.index')->with('success', 'User Updated.');

@@ -156,9 +156,22 @@ class ReportsController extends Controller
         $total_medicine = Medicine::query()->count();
         $total_despensed = DespenseMedicine::query()->select('medicine')->distinct()->count();
         $total_quantity = Medicine::query()->sum('quantity');
-        // get the medicine records
-        $medicines_despense = DespenseMedicine::query()->groupBy('medicine')->latest()->get('medicine');
-        $medicines = Medicine::query()->whereIn('name', $medicines_despense)->limit(4)->get();
+        $medicines = Medicine::query()
+            ->select('medicines.*')
+            ->selectSub(
+                DespenseMedicine::query()
+                    ->selectRaw('COALESCE(SUM(quantity), 0)')
+                    ->whereColumn('medicine', 'medicines.medicine_id'),
+                'total_dispensed'
+            )
+            ->whereExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('despense_medicines')
+                    ->whereColumn('despense_medicines.medicine', 'medicines.medicine_id');
+            })
+            ->orderByDesc('total_dispensed')
+            ->limit(4)
+            ->get();
         // get stock by quantity
         $good_stock = Medicine::query()->where('quantity', '>', 100)->count();
         $low_stock = Medicine::query()->where('quantity', '<=', 100)->count();

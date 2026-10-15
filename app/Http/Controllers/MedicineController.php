@@ -11,8 +11,10 @@ use App\Models\Patient;
 use App\Models\PatientCase;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 
 class MedicineController extends Controller
 {
@@ -556,38 +558,24 @@ class MedicineController extends Controller
 
     public function despense_medicine_reciept(Request $request)
     {
-
-        // get the input data required
-        $request->validate([
-            'despenser' => 'required',
-            'patient_case_id' => 'required|exists:patients,case_no',
-            'doc_license_no' => 'required',
-            'diagnosis' => 'required',
-            'medicine' => 'required',
-            'quantity' => 'required',
-        ]);
+        $validated = $this->validateDispenseRequest($request);
 
         // dd($request->input());
 
         // get patient info
-        $patient = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.case_no',  $request->input('patient_case_id'))->latest('patient_cases.created_at')->first([
+        $patient = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.case_no', $validated['patient_case_id'])->latest('patient_cases.created_at')->first([
             'patients.*',
             'patient_cases.*',
         ]);
 
         // get doctor info
-        $doctor = Doctor::query()->where('license_no', $request->input('doc_license_no'))->first();
+        $doctor = Doctor::query()->where('license_no', $validated['doc_license_no'])->first();
 
         // data today
         $data_today = date('M d, Y');
 
         // medicine info
-        $med_ids = [];
-        foreach ($request->medicine as $key => $value) {
-            $d = $value;
-            array_push($med_ids, $d);
-        }
-        $medicines = Medicine::query()->whereIn('medicine_id', $med_ids)->get(['medicine_id', 'name', 'mesurement']);
+        $medicines = Medicine::query()->whereIn('medicine_id', $validated['medicine'])->get(['medicine_id', 'name', 'mesurement']);
 
         // dd($medicines);
 
@@ -597,64 +585,62 @@ class MedicineController extends Controller
     // despense the medicine and record it in the data base
     public function record_despense_medicine(Request $request)
     {
-        // dd($request->input());
+        $validated = $this->validateDispenseRequest($request);
 
-        // get the input data required
-        $request->validate([
-            'despenser' => 'required',
-            'doc_license_no' => 'required',
-            'patient_case_id' => 'required|exists:patients,case_no',
-            'diagnosis' => 'required',
-            'medicine' => 'required',
-            'quantity' => 'required',
-        ]);
+        DB::transaction(function () use ($request, $validated) {
+            $patient = Patient::query()
+                ->where('case_no', $validated['patient_case_id'])
+                ->firstOrFail();
 
-        // dd($request->input());
+            foreach ($validated['medicine'] as $index => $medicineId) {
+                $medicine = Medicine::query()
+                    ->where('medicine_id', $medicineId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $quantity = (int) $validated['quantity'][$index];
 
-        // get patient info
-        $patient = Patient::query()->where('case_no', $request->input('patient_case_id'))->first();
+                if ($medicine->quantity < $quantity) {
+                    throw ValidationException::withMessages([
+                        'quantity' => "Medicine {$medicine->name} has less quantity to dispense.",
+                    ]);
+                }
 
-        // call the event
-        // event(new RecordDespenseMedicine($patient->id, $request->input('medicine'), $request->input('quantity')));
+                $medicine->decrement('quantity', $quantity);
 
-        // dd($request->input());
-        $data = array();
-
-        // get each medicine
-        for ($i = 0; $i < count($request->input('medicine')); $i++) {
-            $inputs = [
-                'despenser' => $request->input('despenser'),
-                'despensed' => $patient->case_no,
-                'medicine' => $request->input('medicine')[$i],
-                'diagnosis' => $request->input('diagnosis'),
-                'quantity' => $request->input('quantity')[$i],
-                'doctor' => $request->input('doc_license_no'),
-            ];
-
-            // reduce the quantity of the medicine pick base by the quantity given to the patient
-            $medicine = Medicine::query()->where('medicine_id', $request->input('medicine')[$i])->get(['medicine_id', 'name', 'quantity'])->first();
-            $updated_medicine = Medicine::query()->where('medicine_id', $medicine->medicine_id)->where('quantity', '>=', $inputs['quantity'])->update([
-                'quantity' => $medicine->quantity - $inputs['quantity'],
-            ]);
-
-            if (!$updated_medicine) {
-                // dd('quantity too big');
-                return redirect()->route('despenseMedicine')->with('error', 'Medicine ' . $medicine->name . ' has less quantity to despense.');
+                DespenseMedicine::query()->create([
+                    'despenser' => $request->user()->name,
+                    'despensed' => $patient->case_no,
+                    'medicine' => $medicineId,
+                    'diagnosis' => $validated['diagnosis'],
+                    'quantity' => $quantity,
+                    'doctor' => $validated['doc_license_no'],
+                ]);
             }
-
-            array_push($data, $inputs);
-        }
-
-        // dd($data);
-
-        // store the data in the database patient table
-        foreach ($data as $key => $value) {
-            DespenseMedicine::query()->create($value);
-        }
+        });
 
         // redirect back
         return redirect()->route('despenseMedicine')->with('success', 'Medicines are Despensed To the Patient.');
-        // return redirect()->route('despenseMedicine')->with('success', 'Medicine Despensed To the Patient.')->with('patient', $patient->id)->with('medicines', $request->input('medicine'))->with('quantities', $request->input('quantity'));
+    }
+
+    private function validateDispenseRequest(Request $request): array
+    {
+        $validated = $request->validate([
+            'doc_license_no' => 'required|exists:doctors,license_no',
+            'patient_case_id' => 'required|exists:patients,case_no',
+            'diagnosis' => 'required|string',
+            'medicine' => 'required|array|min:1',
+            'medicine.*' => 'required|string|distinct|exists:medicines,medicine_id',
+            'quantity' => 'required|array|min:1',
+            'quantity.*' => 'required|integer|min:1',
+        ]);
+
+        if (array_keys($validated['medicine']) !== array_keys($validated['quantity'])) {
+            throw ValidationException::withMessages([
+                'quantity' => 'Each selected medicine must have a quantity.',
+            ]);
+        }
+
+        return $validated;
     }
 
     public function get_patient_info(Request $request)
