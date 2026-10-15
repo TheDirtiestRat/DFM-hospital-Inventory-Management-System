@@ -20,7 +20,7 @@
 
 <body class="bg-black ">
     <div>
-        <img src="{{ asset('/storage/images/jeffy.png') }}" id="Hiee" alt="" width="500px">
+        <img src="{{ asset('/storage/images/jeffy.jpg') }}" id="Hiee" alt="" width="500px">
         <div class="spinner-border text-ligh" style="width: 3rem; height: 3rem;" id="spin" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
