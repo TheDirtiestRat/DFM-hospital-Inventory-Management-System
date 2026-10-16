@@ -134,20 +134,21 @@
 
     {{-- insert new input script --}}
     <script>
-        function add_medicine(id, name, med_id, remaining) {
+        function add_medicine(id, name, med_id, remaining, unit) {
             // reduce the quantity
             const remElem = document.getElementById(remaining);
+            const availableBeforeSelection = Number(remElem?.textContent);
             let return_quan = 0;
 
             // check if ther is still remaining
-            if (remElem.innerHTML <= 0) {
+            if (!remElem || availableBeforeSelection <= 0) {
                 // call the modal
                 const myModal = new bootstrap.Modal('#warningModal');
                 const modalToggle = document.getElementById('warningModal');
                 myModal.show(modalToggle);
                 return;
             } else {
-                var rem = remElem.innerHTML;
+                var rem = availableBeforeSelection;
                 rem -= 1;
                 return_quan += 1;
                 remElem.innerHTML = rem;
@@ -165,8 +166,8 @@
                 var quantity_input = document.getElementById('quantity_input' + med_id);
                 var quantity = parseInt(quantity_input.value);
                 quantity += 1
-                // quantity_elem.innerHTML = quantity;
                 quantity_input.value = quantity;
+                quantity_input.max = String(Number(remElem.textContent) + quantity);
                 console.log(quantity_input.value);
                 // console.log(document.querySelector('#' + elem_id + ' #quantity'));
                 return;
@@ -176,8 +177,8 @@
             const para = document.createElement("tr");
             para.id = "med" + id;
             para.innerHTML = `
-                                <td>${name}</td>
-                                <td class="text-end" id="quantity"><input type="number" class="form-control w-100" name="quantity[]" value="1" id="quantity_input${med_id}"></td>
+                                <td>${name} <small class="text-muted">(${unit})</small></td>
+                                <td class="text-end" id="quantity"><input type="number" class="form-control w-100" name="quantity[]" min="1" max="${availableBeforeSelection}" value="1" id="quantity_input${med_id}" required></td>
                                 <td class="">
                                     <button class="btn btn-sm btn-danger rounded-3 w-100" type="button" onclick="remove_medicine('med${id}', 'remaining${med_id}')">
                                         <i class="bi bi-trash"></i>

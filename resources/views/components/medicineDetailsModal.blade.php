@@ -33,14 +33,17 @@
             </div>
 
             <div class="col-md-4">
-                <p class="m-0"><strong>Quantity : </strong> <br> {{ $medicine->quantity }}</p>
+                <p class="m-0"><strong>Available stock : </strong> <br> {{ $medicine->quantity }} {{ $medicine->dispensing_unit }}</p>
             </div>
             <div class="col-md-4">
-                <p class="m-0"><strong>Package Type : </strong> <br> {{ $medicine->package_type }}</p>
+                <p class="m-0"><strong>Supplier package : </strong> <br> {{ str($medicine->package_type)->replace('_', ' ')->title() }}</p>
             </div>
             <div class="col-md-4">
-                <p class="m-0"><strong>Mesurement : </strong> <br>{{ $medicine->mesurement_value }}
-                    {{ $medicine->mesurement }}</p>
+                <p class="m-0"><strong>Package size : </strong> <br>{{ $medicine->units_per_package }}
+                    {{ $medicine->dispensing_unit }} per package</p>
+            </div>
+            <div class="col-md-4">
+                <p class="m-0"><strong>Strength/content : </strong> <br>{{ $medicine->strength_display }}</p>
             </div>
 
             <div class="col-12">
@@ -73,7 +76,7 @@
                         {{ $despense->first_name }} {{ $despense->mid_name }} {{ $despense->last_name }}</p>
                 </div>
                 <div class="col-md-auto text-md-end ">
-                    <p class="m-0"><strong>Quantity :</strong> <br> {{ $despense->quantity }}</p>
+                    <p class="m-0"><strong>Quantity :</strong> <br> {{ $despense->quantity }} {{ $medicine->dispensing_unit }}</p>
                 </div>
                 <div class="col-12">
                     <small class="text-muted">Date: {{ $despense->created_at }}</small>

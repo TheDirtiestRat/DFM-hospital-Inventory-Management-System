@@ -17,6 +17,9 @@
                     </h4>
                 </div>
                 <div class="col p-0 text-end">
+                    <a href="{{ route('certificates.prepare', $patient->id) }}" class="btn btn-outline-primary">
+                        Prepare certificate
+                    </a>
                     <a href="{{ route('patientPDFInfo', $patient->id) }}" class="text-decoration-none" target="_blank">
                         <button type="button" class="btn btn-primary">Pdf Details</button>
                     </a>
@@ -157,7 +160,7 @@
                                     @forelse ($despensed_medicines as $medicine)
                                         <tr>
                                             <td>{{ $medicine->name }}</td>
-                                            <td class="text-end">{{ $medicine->total }}</td>
+                                            <td class="text-end">{{ $medicine->total }} {{ $medicine->dispensing_unit }}</td>
                                             <td class="text-end">{{ $medicine->created_at }}</td>
                                         </tr>
                                     @empty

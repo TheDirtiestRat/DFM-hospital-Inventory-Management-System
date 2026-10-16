@@ -98,7 +98,7 @@ Use a consistent title and KPI-card grid, followed by readable charts or recent-
 | Role | Desktop dashboard content |
 | --- | --- |
 | Administrator | Overall counts for users, patients, medicine records/quantity; stock and expiration indicators; patient and dispensing summaries; links to all authorized sections. |
-| Pharmacist | Medicine count/quantity; good, low, and out-of-stock counts; recently/commonly dispensed inventory; direct actions for dispense, add stock, and view dispensing history. |
+| Pharmacist | Medicine count and stock totals separated by dispensing unit; good, low, and out-of-stock counts; recently/commonly dispensed inventory; direct actions for dispense, add stock, and view dispensing history. |
 | Receptionist | Patient total and recent registrations; diagnosis and gender summaries; patient age groups; direct actions for patient search, add patient, and certificates. |
 
 Do not change existing report definitions when rearranging the UI; reconcile calculations with reporting requirements separately.
@@ -114,6 +114,8 @@ Do not change existing report definitions when rearranging the UI; reconcile cal
 ### 4.4 Medicine inventory
 
 **List layout:** medicine name/identifier search; filters for batch, expiration, and stock; a paginated table with identifier, name, type, package/unit, quantity, batch, and expiration; add medicine, batch entry, import, export, edit, and detail actions.
+
+For stock entry, distinguish the supplier package (for example, a box) from the countable dispensing unit (for example, a tablet or mL). Collect package count and units per package, display the calculated available individual-unit quantity before saving, and display strength/content separately with a standard measurement unit. Keep quantity totals separated by dispensing unit on dashboards and reports; never sum tablets and mL into one unlabeled number.
 
 Use clear state badges:
 
@@ -163,7 +165,7 @@ Ensure every visible action is authorized by the server, even if the client hide
 ### 4.7 Reports, certificates, and printing
 
 - Keep report filters above their result/chart area, and provide a clear print/export action where supported.
-- For certificates, select a patient, choose medical or death certificate, show only the corresponding required fields, validate, then preview/print PDF.
+- For certificates, allow preparation directly from patient search results or patient details, choose medical or death certificate, show only the corresponding required fields, validate, then preview/print PDF. Do not make access depend on a modal.
 - Keep paper-oriented content in a print view that excludes navigation and desktop chrome.
 - Preserve the existing A4 portrait certificate output until the required form is reviewed.
 

@@ -7,7 +7,7 @@ DFM Hospital Inventory Management System is a Laravel web application for managi
 ## Documentation
 
 - [System documentation](./SYSTEM_DOCUMENTATION.md) — roles, workflows, data model, routes, development setup, and current limitations.
-- [Desktop Port](./Desktop%20Port.md) — proposed desktop navigation, screen layouts, visual theme, security considerations, and porting decisions.
+- [Desktop Port](./DESKTOP_PORT.md) — proposed desktop navigation, screen layouts, visual theme, security considerations, and porting decisions.
 
 The application helps replace manual stock tracking with a searchable, organized workflow. Staff can use it to understand what is available, identify items that need replenishment, and maintain a history of inventory activity.
 

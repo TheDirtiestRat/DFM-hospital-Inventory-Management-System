@@ -34,22 +34,23 @@
         <p>Despensed Medicine to the patient.</p>
         <div class="d-flex flex-column gap-1">
             {{-- list of medicines dispensed --}}
-            @for ($i = 0; $i < $medicines->count(); $i++)
+            @foreach ($request->medicine as $i => $medicineId)
+                @php($medicine = $medicines->get($medicineId))
                 <div class="row g-2 d-flex align-items-center">
                     <div class="col-auto">
-                        <h6><strong>{{ $medicines[$i]->medicine_id }}</strong></h6>
+                        <h6><strong>{{ $medicine->medicine_id }}</strong></h6>
                     </div>
                     <div class="col-auto">
-                        <h6>{{ $medicines[$i]->name }}</h6>
+                        <h6>{{ $medicine->name }}</h6>
                     </div>
                     <div class="col">
                         <hr>
                     </div>
                     <div class="col-auto">
-                        <h6>{{ $medicines[$i]->mesurement }} {{ $request->quantity[$i] }}</h6>
+                        <h6>{{ $request->quantity[$i] }} {{ $medicine->dispensing_unit }} ({{ $medicine->strength_display }})</h6>
                     </div>
                 </div>
-            @endfor
+            @endforeach
         </div>
 
         <hr>
@@ -60,7 +61,7 @@
             </div>
             <div class="col"></div>
             <div class="col-auto">
-                <h3>{{ $medicines->count() }}</h3>
+                <h3>{{ count($request->medicine) }}</h3>
             </div>
         </div>
 

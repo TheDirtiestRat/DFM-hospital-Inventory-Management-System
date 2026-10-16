@@ -9,6 +9,7 @@ use App\Models\Patient;
 use App\Models\PatientCase;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +63,7 @@ class ReportsController extends Controller
         // get total users
         $total_users = User::query()->count();
         // get total medicine quantity
-        $total_quantity = Medicine::query()->sum('quantity');
+        $total_quantity = $this->formatStockTotals(Medicine::query());
         // get stock by quantity
         $good_stock = Medicine::query()->where('quantity', '>', 100)->count();
         $low_stock = Medicine::query()->where('quantity', '<=', 100)->count();
@@ -79,7 +80,7 @@ class ReportsController extends Controller
 
         // get expiration of meds
         $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->get();
-        $exp_m_arry = array();
+        $exp_m_arry = [];
 
         foreach ($exp_meds as &$value) {
             array_push($exp_m_arry, $value->datediff);
@@ -92,7 +93,7 @@ class ReportsController extends Controller
             if ($key >= 30) {
                 $not_expired += $value;
                 // array_push($not_expired, $value);
-            } else if ($key <= 0) {
+            } elseif ($key <= 0) {
                 $expired += $value;
                 // array_push($expired, $value);
             }
@@ -155,7 +156,7 @@ class ReportsController extends Controller
         // get total's
         $total_medicine = Medicine::query()->count();
         $total_despensed = DespenseMedicine::query()->select('medicine')->distinct()->count();
-        $total_quantity = Medicine::query()->sum('quantity');
+        $total_quantity = $this->formatStockTotals(Medicine::query());
         $medicines = Medicine::query()
             ->select('medicines.*')
             ->selectSub(
@@ -215,7 +216,6 @@ class ReportsController extends Controller
             'total_medicine',
             'total_despense_meds',
 
-
         ));
     }
 
@@ -230,33 +230,33 @@ class ReportsController extends Controller
             $month = $request->month;
 
             // get total of patient listed
-            $new_patients = Patient::query()->latest()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->limit(5)->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
+            $new_patients = Patient::query()->latest()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->limit(5)->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
             // get total of patient listed
-            $total_patients = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $total_patients = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
             // get total today added
             // $date_today = date('Y-m-d');
-            $total_today = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $total_today = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
             // $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->count();
             // get total of request
-            $total_despensed = DespenseMedicine::query()->select('despensed')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->distinct()->count();
+            $total_despensed = DespenseMedicine::query()->select('despensed')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->distinct()->count();
             // total of patients base by gender
-            $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->groupBy('gender')->get();
+            $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->groupBy('gender')->get();
             // total of patients base by blood type
-            $total_by_bloodType = Patient::query()->selectRaw('blood_type, count(case_no) as total')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->groupBy('blood_type')->get();
+            $total_by_bloodType = Patient::query()->selectRaw('blood_type, count(case_no) as total')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->groupBy('blood_type')->get();
             // total of patients base by diagnosis
-            $total_by_diagnosis = PatientCase::query()->selectRaw('diagnosis, count(case_no) as total')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->groupBy('diagnosis')->get();
+            $total_by_diagnosis = PatientCase::query()->selectRaw('diagnosis, count(case_no) as total')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->groupBy('diagnosis')->get();
 
             // get total by age groups
-            $child = Patient::query()->whereBetween('age', [1, 10])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $teen = Patient::query()->whereBetween('age', [11, 20])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $adult = Patient::query()->whereBetween('age', [21, 59])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $old = Patient::query()->whereBetween('age', [60, 100])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $child = Patient::query()->whereBetween('age', [1, 10])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $teen = Patient::query()->whereBetween('age', [11, 20])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $adult = Patient::query()->whereBetween('age', [21, 59])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $old = Patient::query()->whereBetween('age', [60, 100])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
 
             // get total by bmi groups
-            $underweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [0, 18.5])->count();
-            $obesity = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [30, 500])->count();
-            $normal_weight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [18.6, 24.9])->count();
-            $overweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [25, 29.9])->count();
+            $underweight = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [0, 18.5])->count();
+            $obesity = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [30, 500])->count();
+            $normal_weight = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [18.6, 24.9])->count();
+            $overweight = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [25, 29.9])->count();
 
             return view('pages.patientsReports', compact(
                 'new_patients',
@@ -287,7 +287,7 @@ class ReportsController extends Controller
         $total_patients = Patient::query()->count();
         // get total today added
         $date_today = date('Y-m-d');
-        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->count();
+        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "'.$date_today.'"')->count();
         // get total of request
         $total_despensed = DespenseMedicine::query()->select('despensed')->distinct()->count();
         // total of patients base by gender
@@ -343,33 +343,33 @@ class ReportsController extends Controller
             $month = $request->month;
 
             // get total of patient listed
-            $new_patients = Patient::query()->latest()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
+            $new_patients = Patient::query()->latest()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
             // get total of patient listed
-            $total_patients = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $total_patients = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
             // get total today added
             // $date_today = date('Y-m-d');
-            $total_today = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $total_today = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
             // $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->count();
             // get total of request
-            $total_despensed = DespenseMedicine::query()->select('despensed')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->distinct()->count();
+            $total_despensed = DespenseMedicine::query()->select('despensed')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->distinct()->count();
             // total of patients base by gender
-            $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->groupBy('gender')->get();
+            $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->groupBy('gender')->get();
             // total of patients base by blood type
-            $total_by_bloodType = Patient::query()->selectRaw('blood_type, count(case_no) as total')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->groupBy('blood_type')->get();
+            $total_by_bloodType = Patient::query()->selectRaw('blood_type, count(case_no) as total')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->groupBy('blood_type')->get();
             // total of patients base by diagnosis
-            $total_by_diagnosis = PatientCase::query()->selectRaw('diagnosis, count(case_no) as total')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->groupBy('diagnosis')->get();
+            $total_by_diagnosis = PatientCase::query()->selectRaw('diagnosis, count(case_no) as total')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->groupBy('diagnosis')->get();
 
             // get total by age groups
-            $child = Patient::query()->whereBetween('age', [1, 10])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $teen = Patient::query()->whereBetween('age', [11, 20])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $adult = Patient::query()->whereBetween('age', [21, 59])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $old = Patient::query()->whereBetween('age', [60, 100])->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $child = Patient::query()->whereBetween('age', [1, 10])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $teen = Patient::query()->whereBetween('age', [11, 20])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $adult = Patient::query()->whereBetween('age', [21, 59])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $old = Patient::query()->whereBetween('age', [60, 100])->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
 
             // get total by bmi groups
-            $underweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [0, 18.5])->count();
-            $obesity = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [30, 500])->count();
-            $normal_weight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [18.6, 24.9])->count();
-            $overweight = Patient::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->whereBetween('BMI', [25, 29.9])->count();
+            $underweight = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [0, 18.5])->count();
+            $obesity = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [30, 500])->count();
+            $normal_weight = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [18.6, 24.9])->count();
+            $overweight = Patient::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->whereBetween('BMI', [25, 29.9])->count();
         } else {
             // get total of patient listed
             $new_patients = Patient::query()->latest()->get(['id', 'case_no', 'first_name', 'mid_name', 'last_name', 'created_at']);
@@ -377,7 +377,7 @@ class ReportsController extends Controller
             $total_patients = Patient::query()->count();
             // get total today added
             $date_today = date('Y-m-d');
-            $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->count();
+            $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "'.$date_today.'"')->count();
             // get total of request
             $total_despensed = DespenseMedicine::query()->select('despensed')->distinct()->count();
             // total of patients base by gender
@@ -432,19 +432,19 @@ class ReportsController extends Controller
         if ($request->month != null) {
             $month = $request->month;
 
-            $despensed_med = DespenseMedicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->latest()->limit(10)->get();
-            $total_medicine = Medicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $total_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->distinct()->count();
-            $total_quantity = Medicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->sum('quantity');
+            $despensed_med = DespenseMedicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->latest()->limit(10)->get();
+            $total_medicine = Medicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $total_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->distinct()->count();
+            $total_quantity = $this->formatStockTotals(Medicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year));
             // get stock by quantity
-            $good_stock = Medicine::query()->where('quantity', '>', 100)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $low_stock = Medicine::query()->where('quantity', '<=', 100)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-            $out_of_stock = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+            $good_stock = Medicine::query()->where('quantity', '>', 100)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $low_stock = Medicine::query()->where('quantity', '<=', 100)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+            $out_of_stock = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
 
             // get expiration of meds
-            $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get();
+            $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get();
             // $exp_meds = Medicine::query()->selectRaw('(year(`expired_date`) - year(`created_at`)) AS datediff')->get();
-            $exp_m_arry = array();
+            $exp_m_arry = [];
 
             foreach ($exp_meds as &$value) {
                 array_push($exp_m_arry, $value->datediff);
@@ -460,22 +460,22 @@ class ReportsController extends Controller
                 if ($key >= 60) {
                     $not_expired += $value;
                     // array_push($not_expired, $value);
-                } else if ($key <= 30) {
+                } elseif ($key <= 30) {
                     $to_expired += $value;
-                } else if ($key <= 0) {
+                } elseif ($key <= 0) {
                     $expired += $value;
                     // array_push($expired, $value);
                 }
             }
             // dd($counted_meds);
 
-            $out_of_stock_meds = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get();
+            $out_of_stock_meds = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get();
         } else {
-            $despensed_med = DespenseMedicine::query()->join("medicines", "medicines.medicine_id", "=", "despense_medicines.medicine")->latest("despense_medicines.created_at")->limit(10)->get();
+            $despensed_med = DespenseMedicine::query()->join('medicines', 'medicines.medicine_id', '=', 'despense_medicines.medicine')->latest('despense_medicines.created_at')->limit(10)->get();
             // dd($despensed_med);
             $total_medicine = Medicine::query()->count();
             $total_despensed = DespenseMedicine::query()->select('medicine')->distinct()->count();
-            $total_quantity = Medicine::query()->sum('quantity');
+            $total_quantity = $this->formatStockTotals(Medicine::query());
             // get stock by quantity
             $good_stock = Medicine::query()->where('quantity', '>', 100)->count();
             $low_stock = Medicine::query()->where('quantity', '<=', 100)->count();
@@ -484,7 +484,7 @@ class ReportsController extends Controller
             // get expiration of meds
             $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->get();
             // $exp_meds = Medicine::query()->selectRaw('(year(`expired_date`) - year(`created_at`)) AS datediff')->get();
-            $exp_m_arry = array();
+            $exp_m_arry = [];
 
             foreach ($exp_meds as &$value) {
                 array_push($exp_m_arry, $value->datediff);
@@ -500,9 +500,9 @@ class ReportsController extends Controller
                 if ($key >= 60) {
                     $not_expired += $value;
                     // array_push($not_expired, $value);
-                } else if ($key <= 30) {
+                } elseif ($key <= 30) {
                     $to_expired += $value;
-                } else if ($key <= 0) {
+                } elseif ($key <= 0) {
                     $expired += $value;
                     // array_push($expired, $value);
                 }
@@ -539,19 +539,19 @@ class ReportsController extends Controller
 
         // dd($year);
 
-        $despensed_med = DespenseMedicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->latest()->limit(10)->get();
-        $total_medicine = Medicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-        $total_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->distinct()->count();
-        $total_quantity = Medicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->sum('quantity');
+        $despensed_med = DespenseMedicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->latest()->limit(10)->get();
+        $total_medicine = Medicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+        $total_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->distinct()->count();
+        $total_quantity = $this->formatStockTotals(Medicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year));
         // get stock by quantity
-        $good_stock = Medicine::query()->where('quantity', '>', 100)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-        $low_stock = Medicine::query()->where('quantity', '<=', 100)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-        $out_of_stock = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+        $good_stock = Medicine::query()->where('quantity', '>', 100)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+        $low_stock = Medicine::query()->where('quantity', '<=', 100)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+        $out_of_stock = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
 
         // get expiration of meds
-        $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get();
+        $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get();
         // $exp_meds = Medicine::query()->selectRaw('(year(`expired_date`) - year(`created_at`)) AS datediff')->get();
-        $exp_m_arry = array();
+        $exp_m_arry = [];
 
         foreach ($exp_meds as &$value) {
             array_push($exp_m_arry, $value->datediff);
@@ -567,7 +567,7 @@ class ReportsController extends Controller
             if ($key >= 60) {
                 $not_expired += $value;
                 // array_push($not_expired, $value);
-            } else if ($key <= 30) {
+            } elseif ($key <= 30) {
                 $to_expired += $value;
             } else {
                 $expired += $value;
@@ -576,7 +576,7 @@ class ReportsController extends Controller
         }
         // dd($expired);
 
-        $out_of_stock_meds = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get();
+        $out_of_stock_meds = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get();
         // dd($total_today);
 
         return view('pages.despensedMedsReports', compact(
@@ -596,6 +596,7 @@ class ReportsController extends Controller
             'month',
         ));
     }
+
     public function printable_medicine_report(Request $request)
     {
         $month = $request->month;
@@ -604,19 +605,19 @@ class ReportsController extends Controller
 
         // dd($year);
 
-        $despensed_med = DespenseMedicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->latest()->get();
-        $total_medicine = Medicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-        $total_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->distinct()->count();
-        $total_quantity = Medicine::query()->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->sum('quantity');
+        $despensed_med = DespenseMedicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->latest()->get();
+        $total_medicine = Medicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+        $total_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->distinct()->count();
+        $total_quantity = $this->formatStockTotals(Medicine::query()->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year));
         // get stock by quantity
-        $good_stock = Medicine::query()->where('quantity', '>', 100)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-        $low_stock = Medicine::query()->where('quantity', '<=', 100)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
-        $out_of_stock = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->count();
+        $good_stock = Medicine::query()->where('quantity', '>', 100)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+        $low_stock = Medicine::query()->where('quantity', '<=', 100)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
+        $out_of_stock = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->count();
 
         // get expiration of meds
-        $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get();
+        $exp_meds = Medicine::query()->selectRaw('datediff(`expired_date`, date(`created_at`)) AS datediff')->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get();
         // $exp_meds = Medicine::query()->selectRaw('(year(`expired_date`) - year(`created_at`)) AS datediff')->get();
-        $exp_m_arry = array();
+        $exp_m_arry = [];
 
         foreach ($exp_meds as &$value) {
             array_push($exp_m_arry, $value->datediff);
@@ -632,7 +633,7 @@ class ReportsController extends Controller
             if ($key >= 60) {
                 $not_expired += $value;
                 // array_push($not_expired, $value);
-            } else if ($key <= 30) {
+            } elseif ($key <= 30) {
                 $to_expired += $value;
             } else {
                 $expired += $value;
@@ -641,7 +642,7 @@ class ReportsController extends Controller
         }
         // dd($expired);
 
-        $out_of_stock_meds = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = ' . $month . ' and year(`created_at`) = ' . $year)->get();
+        $out_of_stock_meds = Medicine::query()->where('quantity', '=', 0)->whereRaw('month(`created_at`) = '.$month.' and year(`created_at`) = '.$year)->get();
 
         return view('printables.MedicineReports', compact(
             'despensed_med',
@@ -662,13 +663,14 @@ class ReportsController extends Controller
     public function print_pdf_patients_list()
     {
         $day_today = date('m-d-Y');
-        $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->latest('patients.created_at')->get(['patients.case_no', 'patients.first_name', 'patients.mid_name', 'patients.last_name', 'patient_cases.diagnosis', 'patients.created_at',]);
+        $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->latest('patients.created_at')->get(['patients.case_no', 'patients.first_name', 'patients.mid_name', 'patients.last_name', 'patient_cases.diagnosis', 'patients.created_at']);
 
         // image logo
         $img_logo = public_path('storage/images/ormoc.png');
 
         // print by pdd
         $pdf = Pdf::loadView('pdf.patient_list', compact('patients', 'img_logo'));
+
         // download the pdf
         // return $pdf->download($day_today . '_patientList.pdf');
         // then stream it
@@ -684,6 +686,7 @@ class ReportsController extends Controller
 
         // print by pdd
         $pdf = Pdf::loadView('pdf.medicine_list', compact('medicines', 'img_logo'));
+
         // then stream it
         return $pdf->stream();
     }
@@ -715,6 +718,7 @@ class ReportsController extends Controller
 
         // print by pdd
         $pdf = Pdf::loadView('pdf.despense_meds_list', compact('despensed_meds', 'img_logo'));
+
         // then stream it
         return $pdf->stream();
     }
@@ -735,6 +739,7 @@ class ReportsController extends Controller
         // print by pdd
         // $pdf = Pdf::loadView('pdf.despens_reciept', compact('patient', 'patient_case', 'patient_assistances', 'despensed_medicines', 'img_logo'));
         $pdf = Pdf::loadView('pdf.patient_info_sheet', compact('patient', 'patient_case', 'patient_assistances', 'despensed_medicines', 'img_logo'));
+
         // then stream it
         return $pdf->stream();
     }
@@ -754,8 +759,9 @@ class ReportsController extends Controller
 
         // print by pdd
         $pdf = Pdf::loadView('pdf.patient_info_sheet', compact('patient', 'patient_case', 'patient_assistances', 'despensed_medicines', 'img_logo'));
+
         // then stream it
-        return $pdf->download($patient->case_no . '_patientInfo.pdf');
+        return $pdf->download($patient->case_no.'_patientInfo.pdf');
     }
 
     public function print_pdf_medicines_reports()
@@ -763,12 +769,12 @@ class ReportsController extends Controller
         // get overall total
         $total_medicine = Medicine::query()->count();
         $total_despensed = DespenseMedicine::query()->select('medicine')->distinct()->count();
-        $total_quantity = Medicine::query()->sum('quantity');
+        $total_quantity = $this->formatStockTotals(Medicine::query());
         // added by today
         $date_today = date('Y-m-d');
-        $added_medicine = Medicine::query()->whereRaw('date(`created_at`) = "' . $date_today . '"')->count();
-        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "' . $date_today . '"')->distinct()->count();
-        $added_quantity = Medicine::query()->whereRaw('date(`created_at`) = "' . $date_today . '"')->sum('quantity');
+        $added_medicine = Medicine::query()->whereRaw('date(`created_at`) = "'.$date_today.'"')->count();
+        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "'.$date_today.'"')->distinct()->count();
+        $added_quantity = $this->formatStockTotals(Medicine::query()->whereRaw('date(`created_at`) = "'.$date_today.'"'));
         // get stock by quantity
         $good_stock = Medicine::query()->where('quantity', '>', 100)->count();
         $low_stock = Medicine::query()->where('quantity', '<=', 100)->count();
@@ -803,6 +809,7 @@ class ReportsController extends Controller
             'low_stock_meds',
             'out_of_stock_meds',
         ));
+
         // then stream it
         return $pdf->stream();
     }
@@ -812,9 +819,9 @@ class ReportsController extends Controller
         $date_today = date('Y-m-d');
         // get overall total
         $total_patient = Patient::query()->count();
-        $total_today = Patient::query()->whereRaw('date(`created_at`) = "' . $date_today . '"')->count();
+        $total_today = Patient::query()->whereRaw('date(`created_at`) = "'.$date_today.'"')->count();
         $total_despensed = DespenseMedicine::query()->select('medicine')->distinct()->count();
-        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "' . $date_today . '"')->distinct()->count();
+        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "'.$date_today.'"')->distinct()->count();
         // total of patients base by gender
         $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->groupBy('gender')->get();
         // total of patients base by blood type
@@ -822,7 +829,7 @@ class ReportsController extends Controller
         // total of patients base by diagnosis
         $total_by_diagnosis = PatientCase::query()->selectRaw('diagnosis, count(case_no) as total')->groupBy('diagnosis')->get();
         // get total of patient listed
-        $new_patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->whereRaw('MONTH(date(patients.created_at)) = "' . date('m') . '"')->latest('patients.created_at')->get();
+        $new_patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->whereRaw('MONTH(date(patients.created_at)) = "'.date('m').'"')->latest('patients.created_at')->get();
         $recent_patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->latest('patients.updated_at')->get();
 
         // get total by age groups
@@ -856,6 +863,7 @@ class ReportsController extends Controller
             'adult',
             'old',
         ));
+
         // then stream it
         return $pdf->stream();
     }
@@ -865,9 +873,9 @@ class ReportsController extends Controller
         $date_today = date('Y-m-d');
         // get overall total
         $total_patient = Patient::query()->count();
-        $total_today = Patient::query()->whereRaw('date(`created_at`) = "' . $date_today . '"')->count();
+        $total_today = Patient::query()->whereRaw('date(`created_at`) = "'.$date_today.'"')->count();
         $total_despensed = DespenseMedicine::query()->select('medicine')->distinct()->count();
-        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "' . $date_today . '"')->distinct()->count();
+        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "'.$date_today.'"')->distinct()->count();
         // total of patients base by gender
         $total_by_gender = Patient::query()->selectRaw('gender, count(case_no) as total')->groupBy('gender')->get();
         // total of patients base by blood type
@@ -875,17 +883,17 @@ class ReportsController extends Controller
         // total of patients base by diagnosis
         $total_by_diagnosis = PatientCase::query()->selectRaw('diagnosis, count(case_no) as total')->groupBy('diagnosis')->get();
         // get total of patient listed
-        $new_patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->whereRaw('MONTH(date(patients.created_at)) = "' . date('m') . '"')->latest('patients.created_at')->get();
+        $new_patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->whereRaw('MONTH(date(patients.created_at)) = "'.date('m').'"')->latest('patients.created_at')->get();
         $recent_patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->latest('patients.updated_at')->get();
 
         // get overall total
         $total_medicine = Medicine::query()->count();
 
-        $total_quantity = Medicine::query()->sum('quantity');
+        $total_quantity = $this->formatStockTotals(Medicine::query());
         // added by today
-        $added_medicine = Medicine::query()->whereRaw('date(`created_at`) = "' . $date_today . '"')->count();
-        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "' . $date_today . '"')->distinct()->count();
-        $added_quantity = Medicine::query()->whereRaw('date(`created_at`) = "' . $date_today . '"')->sum('quantity');
+        $added_medicine = Medicine::query()->whereRaw('date(`created_at`) = "'.$date_today.'"')->count();
+        $added_despensed = DespenseMedicine::query()->select('medicine')->whereRaw('date(`created_at`) = "'.$date_today.'"')->distinct()->count();
+        $added_quantity = $this->formatStockTotals(Medicine::query()->whereRaw('date(`created_at`) = "'.$date_today.'"'));
         // get stock by quantity
         $good_stock = Medicine::query()->where('quantity', '>', 100)->count();
         $low_stock = Medicine::query()->where('quantity', '<=', 100)->count();
@@ -931,13 +939,28 @@ class ReportsController extends Controller
             'low_stock_meds',
             'out_of_stock_meds',
         ));
+
         // then stream it
         return $pdf->stream();
+    }
+
+    private function formatStockTotals(Builder $query): string
+    {
+        $totals = $query
+            ->select('dispensing_unit')
+            ->selectRaw('SUM(quantity) as total')
+            ->groupBy('dispensing_unit')
+            ->get()
+            ->map(fn ($row) => number_format((float) $row->total).' '.$row->dispensing_unit)
+            ->implode(' · ');
+
+        return $totals !== '' ? $totals : '0';
     }
 
     public function markAsRead()
     {
         Auth::user()->unreadNotifications->markAsRead();
+
         return redirect()->back();
     }
 

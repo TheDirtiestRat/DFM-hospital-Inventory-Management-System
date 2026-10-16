@@ -40,7 +40,7 @@
                 @forelse ($despensed_medicines as $medicine)
                     <tr>
                         <td>{{ $medicine->medicine }} {{ $medicine->name }}</td>
-                        <td class="text-end">{{ $medicine->total }}</td>
+                        <td class="text-end">{{ $medicine->total }} {{ $medicine->dispensing_unit }}</td>
                         <td class="text-end">{{ $medicine->created_at }}</td>
                     </tr>
                 @empty

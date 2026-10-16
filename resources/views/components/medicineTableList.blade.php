@@ -4,7 +4,7 @@
             <th scope="col" style="width: 10%">Id</th>
             <th scope="col">Medicine</th>
             <th scope="col" class="text-end">Type</th>
-            <th scope="col" class="text-center" style="width: 15%">Quantity</th>
+            <th scope="col" class="text-center" style="width: 15%">Available stock</th>
             <th scope="col" style="width: 5%">Action</th>
         </tr>
     </thead>
@@ -32,7 +32,7 @@
                 </th>
                 <td>{{ $medicine->name }} <small class="text-muted float-end">{{ $medicine->manufacturer }}</small></td>
                 <td class="text-end">{{ $medicine->type }}</td>
-                <td class="text-center">{{ $medicine->quantity }}</td>
+                <td class="text-center">{{ $medicine->quantity }} {{ $medicine->dispensing_unit }}</td>
                 <td class="d-flex flex-row gap-2 ">
                     <form>
                         <button type="button" class="btn btn-sm btn-outline-primary btn_pnt{{ $medicine->id }}"

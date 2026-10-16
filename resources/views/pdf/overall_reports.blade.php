@@ -137,7 +137,7 @@
                 </td>
                 <td>
                     <p class="no_margin" style="">{{ $added_quantity }}+</p>
-                    <h1 class="no_margin" style="font-size: 50px;padding:0px">{{ $total_quantity }}</h1>
+                    <h1 class="no_margin" style="font-size: 18px;padding:0px">{{ $total_quantity }}</h1>
                 </td>
                 <td>
                     <p class="no_margin" style="">{{ $added_despensed }}+</p>

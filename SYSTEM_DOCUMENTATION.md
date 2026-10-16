@@ -69,7 +69,7 @@ Patient identity data is in `patients`. Repeated diagnosis/admission data is in 
 
 ### 4.3 Medical and death certificates
 
-From `/patient-certificates`, authorized staff search patients by case number or name and select a patient. The print action validates the certificate type and required fields, then streams a portrait A4 PDF:
+From `/patient-certificates`, authorized staff search patients by case number or name and select a patient. “Choose certificate” opens a standalone preparation page (no modal JavaScript is required); patient details also provide a direct “Prepare certificate” action. The print action validates the certificate type and required fields, then streams a portrait A4 PDF:
 
 - **Medical certificate** — requires a purpose and includes the latest available patient case information.
 - **Death certificate** — requires death date/time/place, cause, and certifier identity/license details.
@@ -87,7 +87,9 @@ Pharmacists and administrators can:
 - Import medicine data from CSV and export a CSV template/data download.
 - Review expiring, expired, non-expired, low-stock, and batch-filtered listings.
 
-The main inventory count is `medicines.quantity`. `batch_medicines` records batch/stock and expiration metadata associated with a medicine identifier. A batch is not a separate stock ledger in the current schema.
+The main inventory count is `medicines.quantity`, stored as individual dispensing units (for example, tablets or mL), not as unopened packages. New stock entry calculates it as `package_count * units_per_package`; `package_type` describes the supplier package, while `dispensing_unit` describes the countable stock unit. Strength/content is stored separately as a numeric `strength_value` and a standard `strength_unit` (`mcg`, `mg`, `g`, `mL`, `L`, or `IU`). Stock totals on dashboards and reports are grouped by dispensing unit rather than adding unlike units together.
+
+The standard-unit migration preserves existing `quantity` values as individual units and defaults existing records to one unit per package. Historic package sizes are not inferred. `batch_medicines` records batch/stock and expiration metadata associated with a medicine identifier. A batch is not a separate stock ledger in the current schema.
 
 ### 4.5 Medicine dispensing
 
@@ -102,7 +104,7 @@ Dispensing is a pharmacist/administrator workflow:
 
 Each `despense_medicines` record stores the dispenser's username, patient case number, medicine identifier, diagnosis, quantity, doctor license number, and timestamps. `GET /despenseMedicineList` shows recorded dispenses. The listing and medicine reports provide history and summary views.
 
-**Operational rule:** dispense quantities must be positive whole numbers and stock must be available. Keep the preview and final confirmation steps; only final confirmation changes stock.
+**Operational rule:** dispense quantities must be positive whole numbers expressed in the medicine's displayed dispensing unit, and stock must be available. Keep the preview and final confirmation steps; only final confirmation changes stock.
 
 ### 4.6 Doctors
 
@@ -139,7 +141,7 @@ The following is the conceptual model represented by the migrations. These relat
 | `users` | User name, email, hashed password, role/type, login indicator, and timestamps. |
 | `patients` | One patient identity/profile per case number, with name, DOB/age, demographic, address, and physical fields. |
 | `patient_cases` | Diagnosis/treatment/admission entries, linked to patients using `case_no`. |
-| `medicines` | Medicine identity, manufacturer/type, package and measurement, available quantity, photo, batch, description, and expiration. |
+| `medicines` | Medicine identity, manufacturer/type, package and standard strength/content, available individual-unit quantity, units per supplier package, dispensing unit, photo, batch, description, and expiration. |
 | `batch_medicines` | Batch identifier/title, medicine identifier, stock date, and expiration date. |
 | `despense_medicines` | Dispensing event line: dispenser, patient case, medicine, diagnosis, quantity, doctor, and timestamps. |
 | `doctors` | Doctor full name, license number, and optional description. |

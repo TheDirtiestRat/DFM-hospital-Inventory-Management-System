@@ -34,7 +34,8 @@
                         </div>
                         <div class="col-md-6">
                             <h5 class="card-title text-truncate m-0 ">{{ $medicine->name }}</h5>
-                            <p class="card-text m-0 ">Remaining : {{ $medicine->quantity }}</p>
+                            <p class="card-text m-0">Available: {{ $medicine->quantity }} {{ $medicine->dispensing_unit }}</p>
+                            <p class="card-text m-0"><small class="text-muted">{{ $medicine->strength_display }}</small></p>
                             <p class="card-text m-0"><small class="text-muted">
                                     {{ $medicine->manufacturer }}</small></p>
                             <p class="card-text m-0"><small class="text-muted">Type :

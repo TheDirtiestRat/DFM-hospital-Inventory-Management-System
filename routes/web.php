@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/patient_details', [PatientController::class, 'show_patient_partial_details']);
         Route::get('/patientsByBarangay', [PatientController::class, 'by_barangay']);
         Route::get('/patient-certificates', [PatientCertificateController::class, 'index'])->name('certificates.index');
+        Route::get('/patient-certificates/{patient}/prepare', [PatientCertificateController::class, 'prepare'])->name('certificates.prepare');
         Route::post('/patient-certificates/{patient}/print', [PatientCertificateController::class, 'print'])->name('certificates.print');
 
         // modal details

@@ -29,11 +29,13 @@
                         </div>
                         <div class="col-6">
                             <h5 class="card-title text-truncate m-0 ">{{ $medicine->name }}</h5>
-                            <p class="card-text ">Remaining : <span class="{{ $style }}"
-                                    id="remaining{{ $medicine->medicine_id }}">{{ $medicine->quantity }}</span>
+                            <p class="card-text">Available:
+                                <span class="{{ $style }}" id="remaining{{ $medicine->medicine_id }}">{{ $medicine->quantity }}</span>
+                                {{ $medicine->dispensing_unit }}
                             </p>
+                            <small class="text-muted">{{ $medicine->strength_display }}</small>
                             <button type="button" class="btn btn-primary btn-sm w-100 "
-                                onclick='add_medicine("med{{ $medicine->medicine_id }}", "{{ $medicine->name }}", "{{ $medicine->medicine_id }}", "remaining{{ $medicine->medicine_id }}")'>
+                                onclick='add_medicine("med{{ $medicine->medicine_id }}", "{{ $medicine->name }}", "{{ $medicine->medicine_id }}", "remaining{{ $medicine->medicine_id }}", "{{ $medicine->dispensing_unit }}")'>
                                 Add
                             </button>
                         </div>
@@ -78,8 +80,10 @@
                         </div>
                         <div class="col-6 p-0">
                             <h5 class="card-title text-truncate m-0 ">{{ $medicine->name }}</h5>
-                            <p class="card-text ">Remaining : <span class="{{ $style }}"
-                                    id="remaining{{ $medicine->medicine_id }}">{{ $medicine->quantity }}</span></p>
+                            <p class="card-text">Available:
+                                <span class="{{ $style }}" id="remaining{{ $medicine->medicine_id }}">{{ $medicine->quantity }}</span>
+                                {{ $medicine->dispensing_unit }}
+                            </p>
                             <button type="button" class="btn btn-primary w-100 "
                                 onclick='add_medicine("med{{ $medicine->medicine_id }}", "{{ $medicine->name }}", "{{ $medicine->medicine_id }}", "remaining{{ $medicine->medicine_id }}")'>
                                 Add

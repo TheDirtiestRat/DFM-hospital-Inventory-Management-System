@@ -87,7 +87,7 @@
                                         <div class="card-body h-100 d-flex align-items-center">
                                             <div>
                                                 <p class="m-0">Total Quantity</p>
-                                                <h1 class="m-0">{{ $total_quantity }}</h1>
+                                                <h1 class="m-0 fs-5">{{ $total_quantity }}</h1>
                                             </div>
                                         </div>
                                     </div>

@@ -30,7 +30,7 @@
                 {{ $des->name }}
             </div>
             <div class="col-md-auto">
-                <button class="btn btn-secondary">{{ $des->dm_q }}</button>
+                <button class="btn btn-secondary">{{ $des->dm_q }} {{ $des->dispensing_unit }}</button>
             </div>
         </div>
     @empty

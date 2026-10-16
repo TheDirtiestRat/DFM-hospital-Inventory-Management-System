@@ -28,6 +28,28 @@ class PatientCertificateTest extends TestCase
             ->assertSee($patient->case_no);
     }
 
+    public function test_patient_can_open_a_direct_certificate_preparation_form(): void
+    {
+        $this->actingAs($this->createUser());
+        $patient = $this->createPatient('0123456', 'Jane', 'Marie', 'Doe');
+        $this->createPatientCase($patient, 'Seasonal influenza');
+
+        $this->get(route('certificates.index'))
+            ->assertOk()
+            ->assertSee(route('certificates.prepare', $patient));
+
+        $this->get(route('certificates.prepare', $patient))
+            ->assertOk()
+            ->assertSee('Prepare Patient Certificate')
+            ->assertSee('Generate PDF')
+            ->assertSee(route('certificates.print', $patient));
+
+        $this->get(route('patient.show', $patient))
+            ->assertOk()
+            ->assertSee('Prepare certificate')
+            ->assertSee(route('certificates.prepare', $patient));
+    }
+
     public function test_medical_certificate_is_streamed_as_a_pdf(): void
     {
         $this->actingAs($this->createUser());

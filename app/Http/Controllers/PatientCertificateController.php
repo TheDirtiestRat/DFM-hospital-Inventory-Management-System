@@ -62,6 +62,11 @@ class PatientCertificateController extends Controller
         ]);
     }
 
+    public function prepare(Patient $patient)
+    {
+        return view('patient.certificate-prepare', compact('patient'));
+    }
+
     public function print(Request $request, Patient $patient)
     {
         $validated = $request->validate([

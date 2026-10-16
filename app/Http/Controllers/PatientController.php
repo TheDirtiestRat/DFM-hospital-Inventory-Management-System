@@ -7,12 +7,11 @@ use App\Models\DespenseMedicine;
 use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\PatientCase;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
-use App\Http\Controllers\ReportsController;
 use App\Models\User;
 use App\Notifications\NewPatient;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PatientController extends Controller
 {
@@ -49,7 +48,7 @@ class PatientController extends Controller
         $total_patients = Patient::query()->where('barangay', '=', $brgy)->count();
         $date_today = date('Y-m-d');
         // $total_today = Patient::query()->where('barangay', '=', $brgy)->count();
-        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->where('barangay', '=', $brgy)->count();
+        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "'.$date_today.'"')->where('barangay', '=', $brgy)->count();
 
         $despensed = DespenseMedicine::query()->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->where('patients.barangay', '=', $brgy)->get();
         $total_despensed = count($despensed);
@@ -101,7 +100,7 @@ class PatientController extends Controller
         $total_patients = Patient::query()->where('barangay', '=', $brgy)->count();
         $date_today = date('Y-m-d');
         // $total_today = Patient::query()->where('barangay', '=', $brgy)->count();
-        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "' . $date_today . '"')->where('barangay', '=', $brgy)->count();
+        $total_today = Patient::query()->whereRaw('DATE(`created_at`) = "'.$date_today.'"')->where('barangay', '=', $brgy)->count();
 
         $despensed = DespenseMedicine::query()->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->where('patients.barangay', '=', $brgy)->get();
         $total_despensed = count($despensed);
@@ -154,12 +153,11 @@ class PatientController extends Controller
         $key = $request->key;
         $value = $request->value;
 
-        if ($key == "brgy") {
+        if ($key == 'brgy') {
             $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('barangay', '=', $value)->latest('patients.created_at')->paginate(16);
         } else {
             $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->latest('patients.created_at')->paginate(16);
         }
-
 
         $patients_by_bloodTypes = Patient::query()->groupBy('blood_type')->get('blood_type');
         $patients_by_citizenship = Patient::query()->groupBy('citizenship')->get('citizenship');
@@ -178,11 +176,12 @@ class PatientController extends Controller
         $key = $request->key;
 
         if ($request->ajax()) {
-            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.first_name', 'like', '%' . $key . '%')->orWhere('patients.last_name', 'like', '%' . $key . '%')->orWhere('patients.mid_name', 'like', '%' . $key . '%')->latest('patients.created_at')->limit(16)->get();
+            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.first_name', 'like', '%'.$key.'%')->orWhere('patients.last_name', 'like', '%'.$key.'%')->orWhere('patients.mid_name', 'like', '%'.$key.'%')->latest('patients.created_at')->limit(16)->get();
+
             return view('components.patientCardList', compact('patients'));
             // dd($patient);
         } else {
-            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->orWhere('patients.gender', '=', $key)->orWhere('patients.blood_type', 'like', $key . "%")->orWhere('patients.citizenship', '=', $key)->latest('patients.created_at')->paginate(16);
+            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->orWhere('patients.gender', '=', $key)->orWhere('patients.blood_type', 'like', $key.'%')->orWhere('patients.citizenship', '=', $key)->latest('patients.created_at')->paginate(16);
             $patients_by_bloodTypes = Patient::query()->groupBy('blood_type')->get('blood_type');
             $patients_by_citizenship = Patient::query()->groupBy('citizenship')->get('citizenship');
 
@@ -212,7 +211,14 @@ class PatientController extends Controller
         // get the data
         if ($request->ajax()) {
             $diagnosis = PatientCase::query()->where('diagnosis_no', $request->no)->where('case_no', $request->pid)->first();
-            $despensed_medicines = DespenseMedicine::query()->selectRaw('despense_medicines.medicine, sum(despense_medicines.quantity) as total, despense_medicines.created_at, medicines.name')->join('medicines', 'despense_medicines.medicine', '=', 'medicines.medicine_id')->where('despensed', '=', $request->pid)->where('diagnosis', $diagnosis->diagnosis_no)->groupBy(['despense_medicines.medicine', 'despense_medicines.created_at', 'medicines.name'])->get();
+            $despensed_medicines = DespenseMedicine::query()
+                ->selectRaw('despense_medicines.medicine, SUM(despense_medicines.quantity) as total, medicines.name, medicines.dispensing_unit')
+                ->join('medicines', 'despense_medicines.medicine', '=', 'medicines.medicine_id')
+                ->where('despensed', '=', $request->pid)
+                ->where('diagnosis', $diagnosis->diagnosis_no)
+                ->groupBy('despense_medicines.medicine', 'medicines.name', 'medicines.dispensing_unit')
+                ->selectRaw('MAX(despense_medicines.created_at) as created_at')
+                ->get();
             // dd($diagnosis);
         }
 
@@ -227,7 +233,7 @@ class PatientController extends Controller
         // generate case number for the new patient
         $generated_case_no = fake()->numerify('0######');
 
-        date_default_timezone_set("Asia/Taipei");
+        date_default_timezone_set('Asia/Taipei');
         $timezome = date_default_timezone_get();
         $arrival_time = date('H:i');
 
@@ -272,9 +278,8 @@ class PatientController extends Controller
             'barangay' => 'required',
         ]);
 
-
         // check if the name of the patient exist already
-        if (!empty(Patient::query()->where('first_name', $request->first_name)->where('last_name', $request->last_name)->orWhere('case_no', $request->case_number)->first())) {
+        if (! empty(Patient::query()->where('first_name', $request->first_name)->where('last_name', $request->last_name)->orWhere('case_no', $request->case_number)->first())) {
             return redirect()->back()->with('warning', 'Patient Record Already Exist.');
         }
 
@@ -308,7 +313,7 @@ class PatientController extends Controller
         ]);
 
         // check if the patient case has an input to input in the database
-        if (!empty($data['diagnosis'])) {
+        if (! empty($data['diagnosis'])) {
             // add the patient case in the database
             PatientCase::query()->create([
                 'case_no' => $data['case_number'],
@@ -324,10 +329,9 @@ class PatientController extends Controller
         }
 
         // send notification
-        $patient_fullname = $data['first_name'] . ' ' . $data['mid_name'] . ' ' . $data['last_name'];
+        $patient_fullname = $data['first_name'].' '.$data['mid_name'].' '.$data['last_name'];
         $users = User::all();
         Notification::send($users, new NewPatient($patient->id, $patient_fullname));
-
 
         // redirect back
         return redirect()->route('patient.create')->with('success', 'New Patient Added.')->with('patient_id', $patient->id);
@@ -370,7 +374,7 @@ class PatientController extends Controller
      */
     public function show(string $id)
     {
-        if (!empty($id) || $id != 0) {
+        if (! empty($id) || $id != 0) {
             $patient = Patient::query()->where('id', $id)->first();
             $diagnosis_no = fake()->numerify('D######');
             // get the patient cases
@@ -379,7 +383,13 @@ class PatientController extends Controller
             // get patitent request assistance
             $patient_assistances = AssistanceRequest::query()->where('case_no', '=', $patient->case_no)->get();
             // get patitent despensed medicines
-            $despensed_medicines = DespenseMedicine::query()->selectRaw('despense_medicines.medicine, sum(despense_medicines.quantity) as total, despense_medicines.created_at, medicines.name')->join('medicines', 'despense_medicines.medicine', '=', 'medicines.medicine_id')->where('despensed', '=', $patient->case_no)->groupBy(['despense_medicines.medicine', 'despense_medicines.created_at', 'medicines.name'])->get();
+            $despensed_medicines = DespenseMedicine::query()
+                ->selectRaw('despense_medicines.medicine, SUM(despense_medicines.quantity) as total, medicines.name, medicines.dispensing_unit')
+                ->join('medicines', 'despense_medicines.medicine', '=', 'medicines.medicine_id')
+                ->where('despensed', '=', $patient->case_no)
+                ->groupBy('despense_medicines.medicine', 'medicines.name', 'medicines.dispensing_unit')
+                ->selectRaw('MAX(despense_medicines.created_at) as created_at')
+                ->get();
             // $despensed_medicines = DespenseMedicine::query()->selectRaw('medicine, sum(quantity) as total, created_at')->where('despensed', '=', $patient->case_no)->groupBy(['medicine', 'created_at'])->get();
         } else {
             return view('patient.index')->with('error', 'No patient with that exist.');
@@ -393,7 +403,7 @@ class PatientController extends Controller
      */
     public function edit(string $id)
     {
-        if (!empty($id) || $id != 0) {
+        if (! empty($id) || $id != 0) {
             $patient = Patient::query()->where('id', $id)->first();
 
             // get the patient cases

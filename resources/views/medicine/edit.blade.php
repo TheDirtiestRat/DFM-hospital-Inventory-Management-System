@@ -79,7 +79,7 @@
                             value="{{ $medicine->name }}" required>
                     </div>
                     <div class="col-md">
-                        <label for="quantity" class="form-label"><span class="ra">*</span> Quantity</label>
+                        <label for="quantity" class="form-label"><span class="ra">*</span> Available individual units</label>
                         <input type="number" class="form-control" placeholder="00" min="0" step="1"
                             name="quantity" id="quantity" value="{{ $medicine->quantity }}" required>
                     </div>
@@ -97,37 +97,60 @@
                             id="manufacturer" value="{{ $medicine->manufacturer }}" required>
                     </div>
                     <div class="col-md">
-                        <label for="pakage_type" class="form-label"><span class="ra">*</span> Package Type</label>
-                        <select class="form-select" name="pakage_type" id="pakage_type" required>
-                            <option selected disabled value>Select Type</option>
-                            <option value="Pads">By Pads</option>
-                            <option value="Box">By Box</option>
-                            <option value="Bottle">By Bottle</option>
-                            <option value="Bags">By Bags</option>
-                            <option value="Capstule">By Capstule</option>
-                            <option value="Tablets">By Tablets</option>
+                        <label for="package_type" class="form-label"><span class="ra">*</span> Supplier package</label>
+                        <select class="form-select" name="package_type" id="package_type" required>
+                            <option value="box">Box</option>
+                            <option value="bottle">Bottle</option>
+                            <option value="blister_pack">Blister pack</option>
+                            <option value="carton">Carton</option>
+                            <option value="bag">Bag</option>
+                            <option value="vial">Vial</option>
+                            <option value="ampoule">Ampoule</option>
+                            <option value="sachet">Sachet</option>
+                            <option value="strip">Strip</option>
                         </select>
                     </div>
                     <div class="col-md">
-                        <label for="expired_date" class="form-label"><span class="ra">*</span> Mesurement</label>
-                        <div class="row gap-0 m-0">
-                            <div class="col-8 p-0 pe-1 ">
-                                <input type="number" class="form-control" placeholder="00" min="1"
-                                    step="1" name="mesurement_value" id="mesurement_value" value="{{ $medicine->mesurement_value }}"
-                                    required>
-                            </div>
-                            <div class="col-4 p-0 ">
-                                <select class="form-select w-100 " name="mesurement" id="mesurement" required>
-                                    <option selected value="l">Liters</option>
-                                    <option value="mm">Miligrams</option>
-                                    {{-- more mesurements to come --}}
-                                </select>
-                            </div>
-                        </div>
+                        <label for="units_per_package" class="form-label"><span class="ra">*</span> Medicine units per package</label>
+                        <input type="number" class="form-control" min="1" step="1" name="units_per_package"
+                            id="units_per_package" value="{{ $medicine->units_per_package }}" required>
                     </div>
                 </div>
 
                 <div class="row g-2 m-2">
+                    <div class="col-md">
+                        <label for="dispensing_unit" class="form-label"><span class="ra">*</span> Dispensing unit</label>
+                        <select class="form-select" name="dispensing_unit" id="dispensing_unit" required>
+                            <option value="tablet">Tablet</option>
+                            <option value="capsule">Capsule</option>
+                            <option value="mL">mL</option>
+                            <option value="bottle">Bottle</option>
+                            <option value="vial">Vial</option>
+                            <option value="ampoule">Ampoule</option>
+                            <option value="sachet">Sachet</option>
+                            <option value="patch">Patch</option>
+                            <option value="inhaler">Inhaler</option>
+                            <option value="drop">Drop</option>
+                            <option value="unit">Other unit</option>
+                        </select>
+                    </div>
+                    <div class="col-md">
+                        <label for="strength_value" class="form-label"><span class="ra">*</span> Strength/content per dispensing unit</label>
+                        <input type="number" class="form-control" min="0.001" max="9999999.999" step="0.001"
+                            name="strength_value" id="strength_value"
+                            value="{{ $medicine->strength_value ?? $medicine->mesurement_value }}" required>
+                    </div>
+                    <div class="col-md">
+                        <label for="strength_unit" class="form-label"><span class="ra">*</span> Standard strength unit</label>
+                        <select class="form-select" name="strength_unit" id="strength_unit" required>
+                            <option value="mcg">mcg (microgram)</option>
+                            <option value="mg">mg (milligram)</option>
+                            <option value="g">g (gram)</option>
+                            <option value="mL">mL (milliliter)</option>
+                            <option value="L">L (liter)</option>
+                            <option value="IU">IU (international unit)</option>
+                        </select>
+                    </div>
                     <div class="col-md">
                         <label for="medicine_type" class="form-label"><span class="ra">*</span> Medicine Type</label>
                         <select class="form-select" name="medicine_type" id="medicine_type" required>
@@ -201,8 +224,10 @@
     {{-- for the select input values --}}
     <script>
         document.getElementById('medicine_type').value = '{{ $medicine->type }}';
-        document.getElementById('mesurement').value = '{{ $medicine->mesurement }}';
-        document.getElementById('pakage_type').value = '{{ $medicine->package_type }}';
+        document.getElementById('strength_unit').value = @json($medicine->strength_unit_label);
+        document.getElementById('dispensing_unit').value = @json($medicine->dispensing_unit);
+        const packageType = @json(strtolower(str_replace(' ', '_', $medicine->package_type)));
+        document.getElementById('package_type').value = packageType;
     </script>
     <!-- image display script -->
     <script>

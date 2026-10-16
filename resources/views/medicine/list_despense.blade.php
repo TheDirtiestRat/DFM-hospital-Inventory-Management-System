@@ -100,11 +100,11 @@
                                     <div class="text-center">{{ $medicine->medicine_id }}</a>
                                     </div>
                                 </th>
-                                <td>{{ $medicine->medicine }}</td>
+                                <td>{{ $medicine->medicine_name }}</td>
                                 <td>{{ $medicine->despenser }}</td>
                                 <td></strong> ({{ $medicine->case_no }})
                                     {{ $medicine->first_name }} {{ $medicine->mid_name }} {{ $medicine->last_name }}</td>
-                                <td class="text-center">{{ $medicine->quantity }}</td>
+                                <td class="text-center">{{ $medicine->quantity }} {{ $medicine->dispensing_unit }}</td>
                                 <td class="text-center">
                                     <small class="text-muted float-end">
                                         {{ $medicine->created_at }}</small>

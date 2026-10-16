@@ -77,9 +77,9 @@
                             value="" required>
                     </div>
                     <div class="col-md">
-                        <label for="quantity" class="form-label"><span class="ra">*</span> Quantity</label>
-                        <input type="number" class="form-control" placeholder="00" min="0" step="1"
-                            name="quantity" id="quantity" value="" required>
+                        <label for="package_count" class="form-label"><span class="ra">*</span> Packages received</label>
+                        <input type="number" class="form-control stock-package-count" placeholder="Number of packages"
+                            min="1" step="1" name="package_count" id="package_count" value="1" required>
                     </div>
                     <div class="col-md">
                         <label for="expired_date" class="form-label"><span class="ra">*</span> Expiration Date</label>
@@ -95,32 +95,68 @@
                             id="manufacturer" value="" required>
                     </div>
                     <div class="col-md">
-                        <label for="pakage_type" class="form-label"><span class="ra">*</span> Package Type</label>
-                        <select class="form-select" name="pakage_type" id="pakage_type" required>
-                            <option selected disabled value>Select Type</option>
-                            <option value="Pads">By Pads</option>
-                            <option value="Box">By Box</option>
-                            <option value="Bottle">By Bottle</option>
-                            <option value="Bags">By Bags</option>
-                            <option value="Capstule">By Capstule</option>
-                            <option value="Tablets">By Tablets</option>
+                        <label for="package_type" class="form-label"><span class="ra">*</span> Supplier package</label>
+                        <select class="form-select" name="package_type" id="package_type" required>
+                            <option value="" selected disabled>Select package</option>
+                            <option value="box">Box</option>
+                            <option value="bottle">Bottle</option>
+                            <option value="blister_pack">Blister pack</option>
+                            <option value="carton">Carton</option>
+                            <option value="bag">Bag</option>
+                            <option value="vial">Vial</option>
+                            <option value="ampoule">Ampoule</option>
+                            <option value="sachet">Sachet</option>
+                            <option value="strip">Strip</option>
                         </select>
                     </div>
                     <div class="col-md">
-                        <label for="expired_date" class="form-label"><span class="ra">*</span> Mesurement</label>
-                        <div class="row gap-0 m-0">
-                            <div class="col-8 p-0 pe-1 ">
-                                <input type="number" class="form-control" placeholder="00" min="1"
-                                    step="1" name="mesurement_value" id="mesurement_value" value=""
-                                    required>
-                            </div>
-                            <div class="col-4 p-0 ">
-                                <select class="form-select w-100 " name="mesurement" id="mesurement" required>
-                                    <option selected value="l">Liters</option>
-                                    <option value="mm">Miligrams</option>
-                                    {{-- more mesurements to come --}}
-                                </select>
-                            </div>
+                        <label for="units_per_package" class="form-label"><span class="ra">*</span> Medicine units per package</label>
+                        <input type="number" class="form-control stock-units-per-package" min="1" step="1"
+                            name="units_per_package" id="units_per_package" value="1" required>
+                    </div>
+                </div>
+
+                <div class="row g-2 m-2">
+                    <div class="col-md">
+                        <label for="dispensing_unit" class="form-label"><span class="ra">*</span> Dispensing unit</label>
+                        <select class="form-select" name="dispensing_unit" id="dispensing_unit" required>
+                            <option value="" selected disabled>Select unit</option>
+                            <option value="tablet">Tablet</option>
+                            <option value="capsule">Capsule</option>
+                            <option value="mL">mL</option>
+                            <option value="bottle">Bottle</option>
+                            <option value="vial">Vial</option>
+                            <option value="ampoule">Ampoule</option>
+                            <option value="sachet">Sachet</option>
+                            <option value="patch">Patch</option>
+                            <option value="inhaler">Inhaler</option>
+                            <option value="drop">Drop</option>
+                            <option value="unit">Other unit</option>
+                        </select>
+                        <small class="text-muted">For liquid dispensed by volume, choose mL and enter the mL per bottle as the package size.</small>
+                    </div>
+                    <div class="col-md">
+                        <label for="strength_value" class="form-label"><span class="ra">*</span> Strength/content per dispensing unit</label>
+                        <input type="number" class="form-control" placeholder="e.g. 500" min="0.001"
+                            max="9999999.999" step="0.001" name="strength_value" id="strength_value" required>
+                    </div>
+                    <div class="col-md">
+                        <label for="strength_unit" class="form-label"><span class="ra">*</span> Standard strength unit</label>
+                        <select class="form-select" name="strength_unit" id="strength_unit" required>
+                            <option value="" selected disabled>Select unit</option>
+                            <option value="mcg">mcg (microgram)</option>
+                            <option value="mg">mg (milligram)</option>
+                            <option value="g">g (gram)</option>
+                            <option value="mL">mL (milliliter)</option>
+                            <option value="L">L (liter)</option>
+                            <option value="IU">IU (international unit)</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="alert alert-info py-2 mb-0">
+                            Total available stock:
+                            <strong><span id="total_stock_units">1</span> <span id="total_stock_unit_label">unit</span></strong>
+                            <span class="text-muted">(packages received × medicine units per package)</span>
                         </div>
                     </div>
                 </div>
@@ -175,6 +211,25 @@
 
     <!-- image display script -->
     <script>
+        const stockPackageCount = document.getElementById('package_count');
+        const stockUnitsPerPackage = document.getElementById('units_per_package');
+        const dispensingUnit = document.getElementById('dispensing_unit');
+        const totalStockUnits = document.getElementById('total_stock_units');
+        const totalStockUnitLabel = document.getElementById('total_stock_unit_label');
+
+        function updateStockTotal() {
+            const packageCount = Number(stockPackageCount.value) || 0;
+            const unitsPerPackage = Number(stockUnitsPerPackage.value) || 0;
+            totalStockUnits.textContent = String(packageCount * unitsPerPackage);
+            totalStockUnitLabel.textContent = dispensingUnit.value || 'unit';
+        }
+
+        [stockPackageCount, stockUnitsPerPackage, dispensingUnit].forEach(input => {
+            input.addEventListener('input', updateStockTotal);
+            input.addEventListener('change', updateStockTotal);
+        });
+        updateStockTotal();
+
         var loadFile = function(event) {
             var image = document.getElementById('outputImage');
             image.src = URL.createObjectURL(event.target.files[0]);

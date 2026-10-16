@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Doctor;
 use App\Models\DespenseMedicine;
+use App\Models\Doctor;
 use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\PatientCase;
@@ -76,11 +76,45 @@ class PharmacyWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_medicine_stock_is_calculated_from_packages_and_units_per_package(): void
+    {
+        $pharmacist = $this->createUser('Pharmacist', 'PHARMACIST', 'password');
+
+        $this->actingAs($pharmacist)
+            ->post(route('medicine.store'), [
+                'medicine_id' => 'M20001',
+                'name' => 'Standard tablet',
+                'manufacturer' => 'Example Manufacturer',
+                'medicine_type' => 'Pain',
+                'package_count' => 5,
+                'units_per_package' => 12,
+                'package_type' => 'box',
+                'dispensing_unit' => 'tablet',
+                'strength_value' => '500',
+                'strength_unit' => 'mg',
+                'batch_no' => 'B20001',
+                'stock_date' => now()->toDateString(),
+                'expired_date' => now()->addYear()->toDateString(),
+            ])
+            ->assertRedirect(route('medicine.index'));
+
+        $this->assertDatabaseHas('medicines', [
+            'medicine_id' => 'M20001',
+            'quantity' => 60,
+            'units_per_package' => 12,
+            'dispensing_unit' => 'tablet',
+            'strength_value' => 500,
+            'strength_unit' => 'mg',
+        ]);
+    }
+
     public function test_pharmacist_dashboard_orders_medicines_by_dispensed_quantity(): void
     {
         $pharmacist = $this->createUser('Pharmacist', 'PHARMACIST', 'password');
         $mostDispensed = $this->createMedicine('M10005', 'Most dispensed medicine', 20);
         $lessDispensed = $this->createMedicine('M10006', 'Less dispensed medicine', 20);
+        $mostDispensed->update(['dispensing_unit' => 'tablet']);
+        $lessDispensed->update(['dispensing_unit' => 'mL']);
 
         DespenseMedicine::query()->create([
             'despenser' => $pharmacist->name,
@@ -103,7 +137,9 @@ class PharmacyWorkflowTest extends TestCase
             ->get('/dashboardPharmacist')
             ->assertOk()
             ->assertSee($mostDispensed->name)
-            ->assertSee($lessDispensed->name);
+            ->assertSee($lessDispensed->name)
+            ->assertSee('20 tablet')
+            ->assertSee('20 mL');
 
         $this->assertLessThan(
             strpos($response->getContent(), $lessDispensed->name),

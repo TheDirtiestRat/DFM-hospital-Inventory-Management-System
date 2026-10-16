@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\RecordDespenseMedicine;
 use App\Models\BatchMedicine;
 use App\Models\DespenseMedicine;
 use App\Models\Doctor;
 use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\PatientCase;
-use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\ValidationException;
 
 class MedicineController extends Controller
@@ -76,24 +75,22 @@ class MedicineController extends Controller
 
     public function despensed_meds_list()
     {
-        // get the medicine records
-        $medicine = Medicine::query()->get('name');
         $despensed_meds = DespenseMedicine::query()->select([
             'despense_medicines.id',
             'despense_medicines.medicine',
             'despense_medicines.quantity',
             'despense_medicines.despenser',
             'despense_medicines.created_at',
+            'medicines.name as medicine_name',
+            'medicines.dispensing_unit',
 
             'patients.case_no',
             'patients.first_name',
             'patients.mid_name',
             'patients.last_name',
-
-            'medicines.medicine_id',
-            // 'medicines.photo',
-
-        ])->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->join('medicines', 'despense_medicines.medicine', '=', 'medicines.name')->whereIn('despense_medicines.medicine', $medicine)->paginate(16);
+        ])->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')
+            ->join('medicines', 'despense_medicines.medicine', '=', 'medicines.medicine_id')
+            ->paginate(16);
 
         // dd($despensed_meds);
 
@@ -108,7 +105,7 @@ class MedicineController extends Controller
         $key = $request->key;
 
         if ($request->ajax()) {
-            $medicines = Medicine::query()->where('name', 'like', '%' . $key . '%')->latest('created_at')->limit(16)->get();
+            $medicines = Medicine::query()->where('name', 'like', '%'.$key.'%')->latest('created_at')->limit(16)->get();
 
             // if is not a despensed list card
             if ($request->despensed_list == false || empty($request->despensed_list)) {
@@ -188,6 +185,7 @@ class MedicineController extends Controller
 
         return view('medicine.import-batch', compact('date_today'));
     }
+
     public function import(Request $request)
     {
         // get the input data required
@@ -202,12 +200,12 @@ class MedicineController extends Controller
 
         $batch_no = $request->batch_no;
 
-        $medicines = array();
+        $medicines = [];
 
         for ($i = 0; $i < count($fileContents); $i++) {
             if ($i != 0) {
                 $data = str_getcsv($fileContents[$i]);
-                $data =  mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1');
+                $data = mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1');
                 // dd($data);
 
                 if (count($data) <= 7 || $data == null) {
@@ -309,7 +307,6 @@ class MedicineController extends Controller
         //     ]);
         // }
 
-
         // get the medicine records
         // $medicines = Medicine::query()->latest()->paginate(16);
 
@@ -324,10 +321,10 @@ class MedicineController extends Controller
     public function export()
     {
         $medicines = Medicine::query()->limit(10)->get();
-        $csvFileName = date('Y-m-d') . '-DFMmedicinesTemplate.csv';
+        $csvFileName = date('Y-m-d').'-DFMmedicinesTemplate.csv';
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $csvFileName . '"',
+            'Content-Disposition' => 'attachment; filename="'.$csvFileName.'"',
         ];
 
         $handle = fopen('php://output', 'w');
@@ -346,7 +343,7 @@ class MedicineController extends Controller
             'Description',
             'Batch No.',
 
-            'Expiration'
+            'Expiration',
         ]); // Add more headers as needed
 
         foreach ($medicines as $medicine) {
@@ -365,7 +362,7 @@ class MedicineController extends Controller
                 $description,
                 $medicine->batch_no,
 
-                $medicine->expired_date
+                $medicine->expired_date,
             ]); // Add more fields as needed
         }
 
@@ -380,65 +377,60 @@ class MedicineController extends Controller
      */
     public function store(Request $request)
     {
-        // get the input data required
-        $request->validate([
+        $validated = $request->validate([
             'medicine_id' => 'required|unique:medicines,medicine_id',
-
-            'name' => 'required|unique:medicines,name',
-            'manufacturer' => 'required',
-            'medicine_type' => 'required',
-
-            'quantity' => 'required',
-            'pakage_type' => 'required',
-            'mesurement' => 'required',
-            'mesurement_value' => 'required',
-
-            'batch_no' => 'required',
-            // 'batch_title' => 'required',
-            'description' => '',
-
-            'stock_date' => 'required',
-
-            'expired_date' => 'required',
+            'name' => 'required|string|max:255|unique:medicines,name',
+            'manufacturer' => 'required|string|max:255',
+            'medicine_type' => 'required|string|max:255',
+            'package_count' => 'required|integer|min:1|max:2147483647',
+            'units_per_package' => 'required|integer|min:1|max:2147483647',
+            'package_type' => 'required|in:box,bottle,blister_pack,carton,bag,vial,ampoule,sachet,strip',
+            'dispensing_unit' => 'required|in:tablet,capsule,mL,bottle,vial,ampoule,sachet,patch,inhaler,drop,unit',
+            'strength_value' => 'required|numeric|gt:0|max:9999999.999',
+            'strength_unit' => 'required|in:mcg,mg,g,mL,L,IU',
+            'batch_no' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'stock_date' => 'required|date',
+            'expired_date' => 'required|date|after_or_equal:today',
         ]);
 
-        $data = $request->all();
-        // dd($data);
+        $quantity = $this->calculateTotalUnits(
+            (int) $validated['package_count'],
+            (int) $validated['units_per_package']
+        );
 
         // add the profile picture
         $newPhotoName = 'aclc500px.png';
         if ($request->photo != null) {
-            $newPhotoName = $request->input('medicine_id') . "-" . $request->name . "." . $request->photo->guessExtension();
+            $newPhotoName = $validated['medicine_id'].'-'.$validated['name'].'.'.$request->photo->guessExtension();
             $request->file('photo')->storeAs('medicine img', $newPhotoName, 'public');
         }
 
-        // store the data in the database patient table
         Medicine::query()->create([
-            'medicine_id' => $data['medicine_id'],
-
-            'name' => $data['name'],
-            'manufacturer' => $data['manufacturer'],
-            'type' => $data['medicine_type'],
-
-            'package_type' => $data['pakage_type'],
-            'mesurement' => $data['mesurement'],
-            'mesurement_value' => $data['mesurement_value'],
-            'quantity' => $data['quantity'],
-
+            'medicine_id' => $validated['medicine_id'],
+            'name' => $validated['name'],
+            'manufacturer' => $validated['manufacturer'],
+            'type' => $validated['medicine_type'],
+            'package_type' => $validated['package_type'],
+            'units_per_package' => $validated['units_per_package'],
+            'dispensing_unit' => $validated['dispensing_unit'],
+            'strength_value' => $validated['strength_value'],
+            'strength_unit' => $validated['strength_unit'],
+            'mesurement_value' => $validated['strength_value'],
+            'mesurement' => $validated['strength_unit'],
+            'quantity' => $quantity,
             'photo' => $newPhotoName,
-            'batch_no' => $data['batch_no'],
-            'description' => $data['description'],
-
-            'expired_date' => $data['expired_date'],
+            'batch_no' => $validated['batch_no'],
+            'description' => $validated['description'] ?? null,
+            'expired_date' => $validated['expired_date'],
         ]);
 
-        // also insert batch medicine
         BatchMedicine::query()->create([
-            'batch_id' => $data['batch_no'],
-            'batch_title' => 'ABC',
-            'medicine_id' => $data['medicine_id'],
-            'stock_date' => $data['stock_date'],
-            'expired_date' => $data['expired_date'],
+            'batch_id' => $validated['batch_no'],
+            'batch_title' => $validated['batch_no'],
+            'medicine_id' => $validated['medicine_id'],
+            'stock_date' => $validated['stock_date'],
+            'expired_date' => $validated['expired_date'],
         ]);
 
         // redirect back
@@ -447,71 +439,88 @@ class MedicineController extends Controller
 
     public function store_batch(Request $request)
     {
-        // get the input data required
-        $request->validate([
-            // 'medicine_id' => 'required|unique:medicines,medicine_id',
-
-            'name' => 'required',
-            'manufacturer' => 'required',
-            'medicine_type' => 'required',
-
-            'quantity' => 'required',
-            'pakage_type' => 'required',
-            'mesurement' => 'required',
-            'mesurement_value' => 'required',
-
-            'batch_no' => 'required',
-            // 'batch_title' => 'required',
-            // 'description' => '',
-
-            'stock_date' => 'required',
-
-            'expired_date' => 'required',
+        $validated = $request->validate([
+            'name' => 'required|array|min:1',
+            'name.*' => 'required|string|max:255',
+            'manufacturer' => 'required|array',
+            'manufacturer.*' => 'required|string|max:255',
+            'medicine_type' => 'required|array',
+            'medicine_type.*' => 'required|string|max:255',
+            'package_count' => 'required|array',
+            'package_count.*' => 'required|integer|min:1|max:2147483647',
+            'units_per_package' => 'required|array',
+            'units_per_package.*' => 'required|integer|min:1|max:2147483647',
+            'package_type' => 'required|array',
+            'package_type.*' => 'required|in:box,bottle,blister_pack,carton,bag,vial,ampoule,sachet,strip',
+            'dispensing_unit' => 'required|array',
+            'dispensing_unit.*' => 'required|in:tablet,capsule,mL,bottle,vial,ampoule,sachet,patch,inhaler,drop,unit',
+            'strength_value' => 'required|array',
+            'strength_value.*' => 'required|numeric|gt:0|max:9999999.999',
+            'strength_unit' => 'required|array',
+            'strength_unit.*' => 'required|in:mcg,mg,g,mL,L,IU',
+            'expired_date' => 'required|array',
+            'expired_date.*' => 'required|date|after_or_equal:today',
+            'batch_no' => 'required|string|max:255',
+            'batch_title' => 'required|string|max:255',
+            'stock_date' => 'required|date',
         ]);
 
-        $data = $request->all();
-        // dd($data);
-
-        // add the profile picture
-        $newPhotoName = 'aclc500px.png';
-        // if ($request->photo != null) {
-        //     $newPhotoName = $request->input('medicine_id') . "-" . $request->name . "." . $request->photo->guessExtension();
-        //     $request->file('photo')->storeAs('medicine img', $newPhotoName, 'public');
-        // }
-
-        for ($i = 0; $i < count($data['name']); $i++) {
-            // generate the medicine id
-            $med_id = fake()->numerify('M#####');
-            // store the data in the database patient table
-            Medicine::query()->create([
-                'medicine_id' => $med_id,
-
-                'name' => $data['name'][$i],
-                'manufacturer' => $data['manufacturer'][$i],
-                'type' => $data['medicine_type'][$i],
-
-                'package_type' => $data['pakage_type'][$i],
-                'mesurement' => $data['mesurement'][$i],
-                'mesurement_value' => $data['mesurement_value'][$i],
-                'quantity' => $data['quantity'][$i],
-
-                'photo' => $newPhotoName,
-                'batch_no' => $data['batch_no'],
-                'description' => '',
-
-                'expired_date' => $data['expired_date'][$i],
-            ]);
-
-            // also insert batch medicine
-            BatchMedicine::query()->create([
-                'batch_id' => $data['batch_no'],
-                'batch_title' => 'ABCD',
-                // 'batch_title' => $data['batch_title'],
-                'medicine_id' => $med_id,
-                'stock_date' => $data['stock_date'],
-                'expired_date' => $data['expired_date'][$i],
-            ]);
+        $rowCount = count($validated['name']);
+        foreach ([
+            'manufacturer',
+            'medicine_type',
+            'package_count',
+            'units_per_package',
+            'package_type',
+            'dispensing_unit',
+            'strength_value',
+            'strength_unit',
+            'expired_date',
+        ] as $field) {
+            if (count($validated[$field]) !== $rowCount) {
+                throw ValidationException::withMessages([
+                    $field => 'Provide values for every medicine in the batch.',
+                ]);
+            }
         }
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['name'] as $index => $name) {
+                $med_id = fake()->numerify('M#####');
+                $quantity = $this->calculateTotalUnits(
+                    (int) $validated['package_count'][$index],
+                    (int) $validated['units_per_package'][$index],
+                    "package_count.{$index}"
+                );
+
+                Medicine::query()->create([
+                    'medicine_id' => $med_id,
+                    'name' => $name,
+                    'manufacturer' => $validated['manufacturer'][$index],
+                    'type' => $validated['medicine_type'][$index],
+                    'package_type' => $validated['package_type'][$index],
+                    'units_per_package' => $validated['units_per_package'][$index],
+                    'dispensing_unit' => $validated['dispensing_unit'][$index],
+                    'strength_value' => $validated['strength_value'][$index],
+                    'strength_unit' => $validated['strength_unit'][$index],
+                    'mesurement_value' => $validated['strength_value'][$index],
+                    'mesurement' => $validated['strength_unit'][$index],
+                    'quantity' => $quantity,
+                    'photo' => 'aclc500px.png',
+                    'batch_no' => $validated['batch_no'],
+                    'description' => '',
+                    'expired_date' => $validated['expired_date'][$index],
+                ]);
+
+                BatchMedicine::query()->create([
+                    'batch_id' => $validated['batch_no'],
+                    'batch_title' => $validated['batch_title'],
+                    'medicine_id' => $med_id,
+                    'stock_date' => $validated['stock_date'],
+                    'expired_date' => $validated['expired_date'][$index],
+                ]);
+            }
+        });
 
         // redirect back
         return redirect()->route('medicine.index')->with('success', 'New Batch of Medicine Added.');
@@ -575,7 +584,10 @@ class MedicineController extends Controller
         $data_today = date('M d, Y');
 
         // medicine info
-        $medicines = Medicine::query()->whereIn('medicine_id', $validated['medicine'])->get(['medicine_id', 'name', 'mesurement']);
+        $medicines = Medicine::query()
+            ->whereIn('medicine_id', $validated['medicine'])
+            ->get(['medicine_id', 'name', 'strength_value', 'strength_unit', 'mesurement_value', 'mesurement', 'dispensing_unit'])
+            ->keyBy('medicine_id');
 
         // dd($medicines);
 
@@ -657,20 +669,20 @@ class MedicineController extends Controller
             ]);
         }
 
-        return view("components.patientInfoDespense", compact('patient'));
+        return view('components.patientInfoDespense', compact('patient'));
     }
 
     public function get_patient_datalist(Request $request)
     {
         // get the data
         if ($request->ajax()) {
-            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.case_no', 'like', '%' . $request->case_no . '%')->limit(8)->get([
+            $patients = Patient::query()->join('patient_cases', 'patients.case_no', '=', 'patient_cases.case_no')->where('patients.case_no', 'like', '%'.$request->case_no.'%')->limit(8)->get([
                 'patients.*',
                 'patient_cases.*',
             ]);
         }
 
-        return view("components.patient_case_no-despense-datalist", compact('patients'));
+        return view('components.patient_case_no-despense-datalist', compact('patients'));
     }
 
     /**
@@ -686,14 +698,14 @@ class MedicineController extends Controller
         // get the data
         if ($request->ajax()) {
             $medicine = Medicine::query()->where('id', $request->id)->first();
-            $despensed_meds = DespenseMedicine::query()->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->where('despense_medicines.medicine', $medicine->name)->get([
+            $despensed_meds = DespenseMedicine::query()->join('patients', 'despense_medicines.despensed', '=', 'patients.case_no')->where('despense_medicines.medicine', $medicine->medicine_id)->get([
                 'despense_medicines.quantity',
                 'patients.case_no',
                 'patients.first_name',
                 'patients.mid_name',
                 'patients.last_name',
                 'despense_medicines.despenser',
-                'despense_medicines.created_at'
+                'despense_medicines.created_at',
             ]);
             // dd($medicine);
         }
@@ -718,99 +730,73 @@ class MedicineController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // get the input data required
-        $request->validate([
-            'medicine_id' => 'required',
-
-            'name' => 'required',
-            'manufacturer' => 'required',
-            'medicine_type' => 'required',
-
-            'quantity' => 'required',
-            'pakage_type' => 'required',
-            'mesurement' => 'required',
-            'mesurement_value' => 'required',
-
-            'batch_no' => 'required',
-            'batch_title' => 'required',
-            'description' => '',
-
-            'stock_date' => 'required',
-
-            'expired_date' => 'required',
+        $validated = $request->validate([
+            'medicine_id' => 'required|string',
+            'name' => 'required|string|max:255',
+            'manufacturer' => 'required|string|max:255',
+            'medicine_type' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:0|max:2147483647',
+            'units_per_package' => 'required|integer|min:1|max:2147483647',
+            'package_type' => 'required|in:box,bottle,blister_pack,carton,bag,vial,ampoule,sachet,strip',
+            'dispensing_unit' => 'required|in:tablet,capsule,mL,bottle,vial,ampoule,sachet,patch,inhaler,drop,unit',
+            'strength_value' => 'required|numeric|gt:0|max:9999999.999',
+            'strength_unit' => 'required|in:mcg,mg,g,mL,L,IU',
+            'batch_no' => 'required|string|max:255',
+            'batch_title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'stock_date' => 'required|date',
+            'expired_date' => 'required|date',
         ]);
 
-        $data = $request->all();
-        // dd($data);
+        $medicine = Medicine::query()->findOrFail($id);
 
-        // update the photo if theres new
-        $newPhotoName = '';
+        $newPhotoName = $medicine->photo;
         if ($request->photo != null) {
-            // find and deletes the image of the employee
             $this->delete_image($id);
-
-            $newPhotoName = $request->input('medicine_id') . "-" . $request->name . "." . $request->photo->guessExtension();
+            $newPhotoName = $validated['medicine_id'].'-'.$validated['name'].'.'.$request->photo->guessExtension();
             $request->file('photo')->storeAs('medicine img', $newPhotoName, 'public');
-            // $request->file('photo')->storeAs('public/images', $newPhotoName);
-        } else {
-            // $emp = Medicine::query()->select('photo')->findOrFail($id)->first();
-            $emp = Medicine::query()->select('photo')->where('id', $id)->first();
-            // dd($emp);
-            $newPhotoName = $emp->photo;
         }
 
-        // store the data in the database patient table
-        $medicine = Medicine::query()->where('id', $id)->update([
-            'medicine_id' => $data['medicine_id'],
-
-            'name' => $data['name'],
-            'manufacturer' => $data['manufacturer'],
-            'type' => $data['medicine_type'],
-
-            'package_type' => $data['pakage_type'],
-            'mesurement' => $data['mesurement'],
-            'mesurement_value' => $data['mesurement_value'],
-            'quantity' => $data['quantity'],
-
+        $medicine->update([
+            'medicine_id' => $validated['medicine_id'],
+            'name' => $validated['name'],
+            'manufacturer' => $validated['manufacturer'],
+            'type' => $validated['medicine_type'],
+            'package_type' => $validated['package_type'],
+            'units_per_package' => $validated['units_per_package'],
+            'dispensing_unit' => $validated['dispensing_unit'],
+            'strength_value' => $validated['strength_value'],
+            'strength_unit' => $validated['strength_unit'],
+            'mesurement_value' => $validated['strength_value'],
+            'mesurement' => $validated['strength_unit'],
+            'quantity' => $validated['quantity'],
             'photo' => $newPhotoName,
-            'batch_no' => $data['batch_no'],
-            'description' => $data['description'],
-
-            'expired_date' => $data['expired_date'],
+            'batch_no' => $validated['batch_no'],
+            'description' => $validated['description'] ?? null,
+            'expired_date' => $validated['expired_date'],
         ]);
 
-        // also insert batch medicine
-        $batch = BatchMedicine::query()->where('batch_id', $data['batch_no'])->update([
-            'batch_id' => $data['batch_no'],
-            'batch_title' => $data['batch_title'],
-            'medicine_id' => $data['medicine_id'],
-            'stock_date' => $data['stock_date'],
-            'expired_date' => $data['expired_date'],
+        BatchMedicine::query()->where('medicine_id', $medicine->medicine_id)->update([
+            'batch_id' => $validated['batch_no'],
+            'batch_title' => $validated['batch_title'],
+            'medicine_id' => $validated['medicine_id'],
+            'stock_date' => $validated['stock_date'],
+            'expired_date' => $validated['expired_date'],
         ]);
-
-
-        // get the input data required
-        // $request->validate([
-        //     'medicine_id' => 'required',
-        //     'name' => 'required',
-        //     'quantity' => 'required',
-        //     'expired_date' => 'required',
-        // ]);
-
-        // $data = $request->all();
-        // // dd($data);
-
-        // // update the information of the medicine
-        // $medicine = Medicine::query()->where('id', $id)->update([
-        //     'medicine_id' => $data['medicine_id'],
-        //     'name' => $data['name'],
-        //     // 'type' => '',
-        //     'quantity' => $data['quantity'],
-        //     'expired_date' => $data['expired_date'],
-        // ]);
 
         // redirect back
         return redirect()->route('medicine.index')->with('success', 'Medicine Updated.');
+    }
+
+    private function calculateTotalUnits(int $packageCount, int $unitsPerPackage, string $field = 'package_count'): int
+    {
+        if ($packageCount > intdiv(2147483647, $unitsPerPackage)) {
+            throw ValidationException::withMessages([
+                $field => 'The calculated stock exceeds the supported inventory limit.',
+            ]);
+        }
+
+        return $packageCount * $unitsPerPackage;
     }
 
     /**
@@ -837,7 +823,7 @@ class MedicineController extends Controller
         $medicine = Medicine::query()->where('id', $id)->first();
 
         // deletes the photo
-        $destination = "storage\medicine img\\" . $medicine->photo;
+        $destination = "storage\medicine img\\".$medicine->photo;
         // $destination = public_path() . "storage/images/" . $emp->profile_pic;
         // dd($destination);
 
